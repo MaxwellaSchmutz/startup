@@ -64,12 +64,59 @@ I am going to use the required technologies in the following ways.
 - **WebSocket** - When a player finishes a game or sets a new high score, the backend will broadcast that event to connected browsers so the leaderboard and live activity feed can update without refreshing the page.
 
 
-below are kind of the things I saw in the example and wanted to put the skeleton for the future.
 ## 🚀 AWS deliverable
 
 For this deliverable I did the following.
 
-- [ ] **Server deployed and accessible with custom domain name** - [My server link (I dont have that yet)]
+- [x] **Server deployed and accessible with custom domain name** - <https://startup.beatstockfish.click>
+
+**Startup URL for grading: <https://startup.beatstockfish.click>**
+
+### EC2 server (10%)
+
+- Launched an Ubuntu 24.04 `t3.micro` EC2 instance in `us-east-2` (AMI `ami-00adec9774170bad2`), instance ID `i-022afe63f35cd4af9`.
+- Created an ed25519 SSH key pair `beatstockfish-key`. The private key lives locally at `~/.ssh/beatstockfish-key.pem` and is **not** committed.
+- Created a security group that allows inbound TCP `22` (SSH), `80` (HTTP), and `443` (HTTPS), plus UDP `443` for HTTP/3, from anywhere.
+- Allocated an Elastic IP (`3.151.188.205`) and associated it with the instance so the public address is stable across restarts.
+- The instance runs a user-data boot script that installs Caddy from the official apt repository and enables it as a `systemd` service, so the web server comes up automatically.
+- Verified reachable at `http://3.151.188.205` (now issues a `308` redirect to HTTPS, which is Caddy's default behavior once a domain is configured).
+
+### Domain name (10%)
+
+- Registered the domain **`beatstockfish.click`** through Porkbun.
+- Created a **Route 53 public hosted zone** for `beatstockfish.click` (hosted zone ID `Z10157641EIX9JEG4AC8O`).
+- Changed the authoritative nameservers at Porkbun to the four Route 53 nameservers, so all DNS for the domain is now served by Route 53:
+  - `ns-660.awsdns-18.net`, `ns-261.awsdns-32.com`, `ns-1161.awsdns-17.org`, `ns-2037.awsdns-62.co.uk`
+- Added A records in the Route 53 hosted zone, all pointing at the Elastic IP `3.151.188.205`:
+  - `beatstockfish.click`
+  - `startup.beatstockfish.click`
+  - `*.beatstockfish.click` (wildcard, for future subdomains)
+- Note: Route 53's *domain registration* service is blocked on the new AWS account experience unless you irreversibly "activate advanced features", so the domain itself was registered at Porkbun and then delegated to Route 53 for DNS hosting.
+
+### HTTPS via Caddy (80%)
+
+- Replaced the default `:80` site block in `/etc/caddy/Caddyfile` on the server with a domain-based configuration:
+
+  ```
+  {
+      email msch2022@byu.edu
+  }
+
+  beatstockfish.click, startup.beatstockfish.click {
+      root * /usr/share/caddy
+      file_server
+  }
+  ```
+
+- Ran `sudo caddy validate` then `sudo systemctl reload caddy`. Caddy automatically obtained Let's Encrypt certificates for both hostnames over the ACME challenge and now redirects all HTTP traffic to HTTPS.
+- The original default file is kept on the server as `/etc/caddy/Caddyfile.default.bak`.
+- Replaced the default Caddy welcome page at `/usr/share/caddy/index.html` with a simple landing page for the startup that includes the required text "Web Programming 260" (original kept as `/usr/share/caddy/index.html.caddy-default.bak`).
+
+### Verification
+
+- <https://startup.beatstockfish.click> serves the startup landing page over HTTPS with a valid Let's Encrypt certificate (issuer: Let's Encrypt, subject CN `startup.beatstockfish.click`), and the page contains the text "Web Programming 260".
+- <https://beatstockfish.click> also serves the page over HTTPS.
+- `http://startup.beatstockfish.click` returns `308 Permanent Redirect` to the `https://` URL.
 ## 🚀 HTML deliverable
 
 For this deliverable I did the following.
