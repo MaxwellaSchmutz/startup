@@ -1,0 +1,6 @@
+# AI coding tool rule files (AWS Agent Toolkit) - kept local, not part of the project
+CLAUDE.md
+AGENTS.md
+
+# SSH keys - never commit
+*.pem
