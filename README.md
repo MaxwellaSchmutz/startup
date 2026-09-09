@@ -2,7 +2,7 @@
 
 [My Notes](notes.md)
 
-Stockfish Survival is a competitive chess game where the goal is not to beat Stockfish, but to survive against it for as many moves as possible. Every player faces the same engine difficulty and move-time limit so scores are comparable. Completed games are saved and ranked on a global leaderboard.
+Stockfish Survival is a competitive chess game where the goal is not to beat Stockfish, but to survive against it for as many moves as possible. Every player faces the same engine difficulty and move time limit so scores are comparable. Completed games are saved and ranked on a global leaderboard.
 
 ## 🚀 Specification Deliverable
 
