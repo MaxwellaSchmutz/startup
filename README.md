@@ -63,12 +63,13 @@ I am going to use the required technologies in the following ways.
 - **DB/Login** - MongoDB will store registered users, hashed authentication credentials, completed games, and best scores. Game submission and personal data endpoints will require authentication.
 - **WebSocket** - When a player finishes a game or sets a new high score, the backend will broadcast that event to connected browsers so the leaderboard and live activity feed can update without refreshing the page.
 
+
+below are kind of the things I saw in the example and wanted to put the skeleton for the future.
 ## 🚀 AWS deliverable
 
 For this deliverable I did the following.
 
-- [ ] **Server deployed and accessible with custom domain name** - [My server link](https://yourdomainnamehere.click).
-
+- [ ] **Server deployed and accessible with custom domain name** - [My server link (I dont have that yet)]
 ## 🚀 HTML deliverable
 
 For this deliverable I did the following.
