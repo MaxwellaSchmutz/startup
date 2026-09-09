@@ -4,6 +4,17 @@
 
 Stockfish Survival is a competitive chess game where the goal is not to beat Stockfish, but to survive against it for as many moves as possible. Every player faces the same engine difficulty and move-time limit so scores are comparable. Completed games are saved and ranked on a global leaderboard.
 
+## 🚀 Specification Deliverable
+
+For this deliverable I did the following. I checked the box `[x]` and added a description for things I completed.
+
+- [ ] I completed the prerequisites for this deliverable (Git commit requirement)
+- [x] **Proper use of Markdown** - The README uses headings, links, lists, an embedded image, a checklist, a fenced code block, and a Mermaid sequence diagram.
+- [x] **A concise and compelling elevator pitch** - The elevator pitch explains the core idea and why competing to survive against Stockfish is interesting.
+- [x] **Description of key features** - The key features section describes authentication, gameplay, scoring, saved results, the leaderboard, realtime updates, and third-party data.
+- [x] **Description of how you will use each technology** - HTML, CSS, React, the backend service, MongoDB/login, WebSocket, and the Chess.com PubAPI are all explicitly described.
+- [x] **One or more rough sketches of your application** - The rough wireframe is embedded below using a Markdown image reference.
+
 ### Elevator pitch
 
 Most people are not going to beat Stockfish, but that does not mean playing it cannot be competitive. Stockfish Survival turns losing to one of the strongest chess engines in the world into the game itself. Players compete to survive as many moves as possible under the same conditions, save their best attempts, and watch the leaderboard update as other players finish games. It is simple to understand, difficult to master, and gives every game an obvious score to beat.
@@ -52,13 +63,77 @@ I am going to use the required technologies in the following ways.
 - **DB/Login** - MongoDB will store registered users, hashed authentication credentials, completed games, and best scores. Game submission and personal data endpoints will require authentication.
 - **WebSocket** - When a player finishes a game or sets a new high score, the backend will broadcast that event to connected browsers so the leaderboard and live activity feed can update without refreshing the page.
 
-## Specification Deliverable
+## 🚀 AWS deliverable
 
 For this deliverable I did the following.
 
-- [ ] **Prerequisites / Git commit requirement** - Check this only after the required Git/GitHub prerequisite work and commit-history requirement have actually been completed.
-- [x] **Proper use of Markdown** - The README uses headings, links, lists, an embedded image, a checklist, and a Mermaid sequence diagram.
-- [x] **A concise and compelling elevator pitch** - The elevator pitch explains the core idea and why competing to survive against Stockfish is interesting.
-- [x] **Description of key features** - The key features section describes authentication, gameplay, scoring, saved results, the leaderboard, realtime updates, and third-party data.
-- [x] **Description of how each technology will be used** - HTML, CSS, React, the backend service, MongoDB/login, WebSocket, and the Chess.com PubAPI are all explicitly described.
-- [x] **One or more rough sketches embedded with Markdown** - The rough application wireframe is embedded above as `stockfish-survival-wireframe.png`.
+- [ ] **Server deployed and accessible with custom domain name** - [My server link](https://yourdomainnamehere.click).
+
+## 🚀 HTML deliverable
+
+For this deliverable I did the following.
+
+- [ ] **HTML pages** - I did not complete this part of the deliverable.
+- [ ] **Proper HTML element usage** - I did not complete this part of the deliverable.
+- [ ] **Links** - I did not complete this part of the deliverable.
+- [ ] **Text** - I did not complete this part of the deliverable.
+- [ ] **3rd party API placeholder** - I did not complete this part of the deliverable.
+- [ ] **Images** - I did not complete this part of the deliverable.
+- [ ] **DB/Login placeholder** - I did not complete this part of the deliverable.
+- [ ] **WebSocket placeholder** - I did not complete this part of the deliverable.
+
+## 🚀 CSS deliverable
+
+For this deliverable I did the following.
+
+- [ ] **Header, footer, and main content body** - I did not complete this part of the deliverable.
+- [ ] **Navigation elements** - I did not complete this part of the deliverable.
+- [ ] **Responsive to window resizing** - I did not complete this part of the deliverable.
+- [ ] **Application elements** - I did not complete this part of the deliverable.
+- [ ] **Application text content** - I did not complete this part of the deliverable.
+- [ ] **Application images** - I did not complete this part of the deliverable.
+
+## 🚀 React Phase 1: Routing deliverable
+
+For this deliverable I did the following.
+
+- [ ] **Bundled using Vite** - I did not complete this part of the deliverable.
+- [ ] **Components** - I did not complete this part of the deliverable.
+- [ ] **Router** - I did not complete this part of the deliverable.
+
+## 🚀 React Phase 2: Reactivity
+
+For this deliverable I did the following.
+
+- [ ] **All functionality implemented or mocked out** - I did not complete this part of the deliverable.
+- [ ] **Hooks** - I did not complete this part of the deliverable.
+
+## 🚀 Service deliverable
+
+For this deliverable I did the following.
+
+- [ ] **Node.js/Express HTTP service** - I did not complete this part of the deliverable.
+- [ ] **Static middleware for frontend** - I did not complete this part of the deliverable.
+- [ ] **Calls to third party endpoints** - I did not complete this part of the deliverable.
+- [ ] **Backend service endpoints** - I did not complete this part of the deliverable.
+- [ ] **Frontend calls service endpoints** - I did not complete this part of the deliverable.
+
+## 🚀 DB/Login deliverable
+
+For this deliverable I did the following.
+
+- [ ] **User registration** - I did not complete this part of the deliverable.
+- [ ] **User login and logout** - I did not complete this part of the deliverable.
+- [ ] **Stores data in MongoDB** - I did not complete this part of the deliverable.
+- [ ] **Stores credentials in MongoDB** - I did not complete this part of the deliverable.
+- [ ] **Restricts functionality based on authentication** - I did not complete this part of the deliverable.
+
+## 🚀 WebSocket deliverable
+
+For this deliverable I did the following.
+
+- [ ] **Backend listens for WebSocket connection** - I did not complete this part of the deliverable.
+- [ ] **Frontend makes WebSocket connection** - I did not complete this part of the deliverable.
+- [ ] **Data sent over WebSocket connection** - I did not complete this part of the deliverable.
+- [ ] **WebSocket data displayed** - I did not complete this part of the deliverable.
+- [ ] **Application is fully functional** - I did not complete this part of the deliverable.
