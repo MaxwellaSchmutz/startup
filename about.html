@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About - Stockfish Survival</title>
+  </head>
+  <body>
+    <header>
+      <h1>Stockfish Survival</h1>
+
+      <nav>
+        <menu>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="play.html">Play</a></li>
+          <li><a href="leaderboard.html">Leaderboard</a></li>
+          <li><a href="about.html">About</a></li>
+        </menu>
+      </nav>
+
+      <hr />
+    </header>
+
+    <main>
+      <div id="picture" class="picture-box">
+        <img width="500px" src="stockfish-survival-wireframe.png" alt="Rough wireframe of the login, game, and leaderboard views" />
+      </div>
+
+      <p>
+        Stockfish Survival is a competitive chess game where the goal is not to beat Stockfish, but to survive
+        against it for as many moves as possible. Every player faces the same engine difficulty and move time
+        limit, so scores are directly comparable. Completed games are saved and ranked on a global leaderboard.
+      </p>
+
+      <p>Every game ends the same three ways: checkmate, resignation, or running out of time on the move clock.</p>
+
+      <hr />
+
+      <!-- Third party service placeholder: Chess.com PubAPI lookup -->
+      <h2>Look up a Chess.com player</h2>
+      <p>Enter a Chess.com username to see their public stats, pulled from the Chess.com PubAPI.</p>
+      <form method="get" action="about.html">
+        <label for="chesscomUsername">Chess.com username</label>
+        <input type="text" id="chesscomUsername" name="chesscomUsername" placeholder="hikaru" />
+        <button type="submit">Look up stats</button>
+      </form>
+
+      <div id="chesscomStats">
+        <div>Username: <span class="stat-username">MagnusCarlsen</span></div>
+        <div>Rating: <span class="stat-rating">2839</span></div>
+        <div>Wins: <span class="stat-wins">--</span></div>
+        <div>Losses: <span class="stat-losses">--</span></div>
+      </div>
+    </main>
+
+    <footer>
+      <hr />
+      <span class="text-reset">Maxwell Schmutz</span>
+      <br />
+      <a href="https://github.com/MaxwellaSchmutz/startup">GitHub</a>
+    </footer>
+  </body>
+</html>

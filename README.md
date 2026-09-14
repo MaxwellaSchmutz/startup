@@ -121,14 +121,15 @@ For this deliverable I did the following.
 
 For this deliverable I did the following.
 
-- [ ] **HTML pages** - I did not complete this part of the deliverable.
-- [ ] **Proper HTML element usage** - I did not complete this part of the deliverable.
-- [ ] **Links** - I did not complete this part of the deliverable.
-- [ ] **Text** - I did not complete this part of the deliverable.
-- [ ] **3rd party API placeholder** - I did not complete this part of the deliverable.
-- [ ] **Images** - I did not complete this part of the deliverable.
-- [ ] **DB/Login placeholder** - I did not complete this part of the deliverable.
-- [ ] **WebSocket placeholder** - I did not complete this part of the deliverable.
+- [x] **HTML pages** - Four pages, one per main view: `index.html` (home/login), `play.html` (the game), `leaderboard.html` (top scores), and `about.html` (game description and the Chess.com lookup).
+- [x] **Proper HTML element usage** - Every page uses `header`, `nav`, `menu`, `main`, and `footer` for structure, plus `form`, `label`, `input`, `button`, and `table` for content.
+- [x] **Links** - The nav menu on every page links to all four pages, and the home page and every footer link out to this GitHub repo.
+- [x] **Text** - The home page has the elevator pitch, and the about page describes the game and how a match ends.
+- [x] **3rd party API placeholder** - The about page has a form to look up a Chess.com username and a placeholder result area for the stats that will come back from the Chess.com PubAPI.
+- [x] **Images** - The about page embeds the rough wireframe (`stockfish-survival-wireframe.png`).
+- [x] **Login placeholder** - The home page has a login/create-account form and a "Playing as" area that will show the logged-in player's name.
+- [x] **DB/Login placeholder** - The leaderboard page shows a table of top survivors that will eventually be populated from MongoDB.
+- [x] **WebSocket placeholder** - The play page has a "Live activity" list that will show realtime notifications about other players' games.
 
 ## 🚀 CSS deliverable
 

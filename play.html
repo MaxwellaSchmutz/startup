@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Play - Stockfish Survival</title>
+  </head>
+  <body>
+    <header>
+      <h1>Stockfish Survival</h1>
+
+      <nav>
+        <menu>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="play.html">Play</a></li>
+          <li><a href="leaderboard.html">Leaderboard</a></li>
+          <li><a href="about.html">About</a></li>
+        </menu>
+      </nav>
+
+      <hr />
+    </header>
+
+    <main>
+      <div class="players">
+        Player:
+        <span class="player-name">Guest</span>
+      </div>
+
+      <br />
+
+      <div>
+        <label for="movesSurvived">Moves survived</label>
+        <input type="text" id="movesSurvived" value="0" readonly />
+      </div>
+
+      <div>
+        <label for="moveClock">Move clock</label>
+        <input type="text" id="moveClock" value="0:30" readonly />
+      </div>
+
+      <br />
+
+      <div>
+        <button>Resign</button>
+        <button>New Game</button>
+      </div>
+
+      <br />
+
+      <!-- Placeholder chessboard. No CSS/JS yet, so this is just the structure and starting position. -->
+      <table id="board" border="1" cellspacing="0" cellpadding="10">
+        <tr>
+          <td bgcolor="#eeeeee">♜</td>
+          <td bgcolor="#777777">♞</td>
+          <td bgcolor="#eeeeee">♝</td>
+          <td bgcolor="#777777">♛</td>
+          <td bgcolor="#eeeeee">♚</td>
+          <td bgcolor="#777777">♝</td>
+          <td bgcolor="#eeeeee">♞</td>
+          <td bgcolor="#777777">♜</td>
+        </tr>
+        <tr>
+          <td bgcolor="#777777">♟</td>
+          <td bgcolor="#eeeeee">♟</td>
+          <td bgcolor="#777777">♟</td>
+          <td bgcolor="#eeeeee">♟</td>
+          <td bgcolor="#777777">♟</td>
+          <td bgcolor="#eeeeee">♟</td>
+          <td bgcolor="#777777">♟</td>
+          <td bgcolor="#eeeeee">♟</td>
+        </tr>
+        <tr>
+          <td bgcolor="#eeeeee"></td>
+          <td bgcolor="#777777"></td>
+          <td bgcolor="#eeeeee"></td>
+          <td bgcolor="#777777"></td>
+          <td bgcolor="#eeeeee"></td>
+          <td bgcolor="#777777"></td>
+          <td bgcolor="#eeeeee"></td>
+          <td bgcolor="#777777"></td>
+        </tr>
+        <tr>
+          <td bgcolor="#777777"></td>
+          <td bgcolor="#eeeeee"></td>
+          <td bgcolor="#777777"></td>
+          <td bgcolor="#eeeeee"></td>
+          <td bgcolor="#777777"></td>
+          <td bgcolor="#eeeeee"></td>
+          <td bgcolor="#777777"></td>
+          <td bgcolor="#eeeeee"></td>
+        </tr>
+        <tr>
+          <td bgcolor="#eeeeee"></td>
+          <td bgcolor="#777777"></td>
+          <td bgcolor="#eeeeee"></td>
+          <td bgcolor="#777777"></td>
+          <td bgcolor="#eeeeee"></td>
+          <td bgcolor="#777777"></td>
+          <td bgcolor="#eeeeee"></td>
+          <td bgcolor="#777777"></td>
+        </tr>
+        <tr>
+          <td bgcolor="#777777"></td>
+          <td bgcolor="#eeeeee"></td>
+          <td bgcolor="#777777"></td>
+          <td bgcolor="#eeeeee"></td>
+          <td bgcolor="#777777"></td>
+          <td bgcolor="#eeeeee"></td>
+          <td bgcolor="#777777"></td>
+          <td bgcolor="#eeeeee"></td>
+        </tr>
+        <tr>
+          <td bgcolor="#eeeeee">♙</td>
+          <td bgcolor="#777777">♙</td>
+          <td bgcolor="#eeeeee">♙</td>
+          <td bgcolor="#777777">♙</td>
+          <td bgcolor="#eeeeee">♙</td>
+          <td bgcolor="#777777">♙</td>
+          <td bgcolor="#eeeeee">♙</td>
+          <td bgcolor="#777777">♙</td>
+        </tr>
+        <tr>
+          <td bgcolor="#777777">♖</td>
+          <td bgcolor="#eeeeee">♘</td>
+          <td bgcolor="#777777">♗</td>
+          <td bgcolor="#eeeeee">♕</td>
+          <td bgcolor="#777777">♔</td>
+          <td bgcolor="#eeeeee">♗</td>
+          <td bgcolor="#777777">♘</td>
+          <td bgcolor="#eeeeee">♖</td>
+        </tr>
+      </table>
+
+      <br />
+
+      <!-- WebSocket placeholder: realtime activity from other players -->
+      <h2>Live activity</h2>
+      <ul class="notification">
+        <li class="player-name">Ada started a new game</li>
+        <li class="player-name">Tim survived 42 moves and set a new personal best</li>
+        <li class="player-name">Priya's game ended at move 17</li>
+      </ul>
+    </main>
+
+    <footer>
+      <hr />
+      <span class="text-reset">Maxwell Schmutz</span>
+      <br />
+      <a href="https://github.com/MaxwellaSchmutz/startup">GitHub</a>
+    </footer>
+  </body>
+</html>

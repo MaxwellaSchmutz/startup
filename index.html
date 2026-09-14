@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stockfish Survival</title>
+  </head>
+  <body>
+    <header>
+      <h1>Stockfish Survival</h1>
+      <p>Survive as many moves as you can against the engine.</p>
+
+      <nav>
+        <menu>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="play.html">Play</a></li>
+          <li><a href="leaderboard.html">Leaderboard</a></li>
+          <li><a href="about.html">About</a></li>
+        </menu>
+      </nav>
+
+      <hr />
+    </header>
+
+    <main>
+      <p>
+        Most people are not going to beat Stockfish, but that does not mean playing it cannot be competitive.
+        Stockfish Survival turns losing to one of the strongest chess engines in the world into the game itself.
+        Register, take on the engine, and see how many moves you can survive before the leaderboard remembers your
+        name.
+      </p>
+
+      <p>
+        This is the startup application for CS 260. Source code:
+        <a href="https://github.com/MaxwellaSchmutz/startup">github.com/MaxwellaSchmutz/startup</a>
+      </p>
+
+      <hr />
+
+      <h2>Login or create an account</h2>
+      <form method="post" action="/api/auth/login">
+        <div>
+          <label for="email">Email</label>
+          <span>@</span>
+          <input type="email" id="email" name="email" placeholder="your@email.com" />
+        </div>
+        <div>
+          <label for="password">Password</label>
+          <span>🔒</span>
+          <input type="password" id="password" name="password" placeholder="password" />
+        </div>
+        <button type="submit" formaction="/api/auth/login">Login</button>
+        <button type="submit" formaction="/api/auth/register">Create Account</button>
+      </form>
+
+      <div id="current-player">
+        <span>Playing as:</span>
+        <span class="player-name">Guest</span>
+      </div>
+    </main>
+
+    <footer>
+      <hr />
+      <span class="text-reset">Maxwell Schmutz</span>
+      <br />
+      <a href="https://github.com/MaxwellaSchmutz/startup">GitHub</a>
+    </footer>
+  </body>
+</html>
