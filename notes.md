@@ -56,5 +56,13 @@ deployed it as its own service with `deployFiles.sh`.
 - Copied `deployFiles.sh` over from the `simon` project per the deliverable
   instructions; deploy with
   `./deployFiles.sh -k ~/.ssh/beatstockfish-key.pem -h beatstockfish.click -s startup`
-  to publish under `startup.beatstockfish.click` (already the DNS name pointed at by
-  the AWS deliverable).
+  to publish under `startup.beatstockfish.click`.
+- **Gotcha**: `deployFiles.sh` only ever copies files into `services/<service>/public`
+  on the box - it doesn't touch Caddy. The AWS deliverable's Caddyfile had
+  `startup.beatstockfish.click` grouped with the bare domain and rooted at
+  `/usr/share/caddy` (the placeholder landing page), so deploying didn't actually
+  change what visitors saw. Fixed by giving `startup.beatstockfish.click` its own
+  Caddy block rooted at `/home/ubuntu/services/startup/public` (same pattern as the
+  `simon` block), then `sudo caddy validate` + `sudo systemctl reload caddy`. Old
+  Caddyfile backed up as `~/Caddyfile.bak-startup` on the server. Confirmed live at
+  <https://startup.beatstockfish.click>.
