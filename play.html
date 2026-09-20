@@ -4,150 +4,155 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Play - Stockfish Survival</title>
-  </head>
-  <body>
-    <header>
-      <h1>Stockfish Survival</h1>
 
-      <nav>
-        <menu>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="play.html">Play</a></li>
-          <li><a href="leaderboard.html">Leaderboard</a></li>
-          <li><a href="about.html">About</a></li>
+    <!-- Include bootstrap CSS framework -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+      crossorigin="anonymous"
+    />
+
+    <!-- Page CSS loads after Bootstrap so our overrides win -->
+    <link rel="stylesheet" href="main.css" />
+    <link rel="stylesheet" href="play.css" />
+  </head>
+  <body class="bg-dark text-light">
+    <header class="container-fluid">
+      <nav class="navbar fixed-top navbar-dark">
+        <a class="navbar-brand" href="#">Stockfish Survival</a>
+        <menu class="navbar-nav">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="play.html">Play</a></li>
+          <li class="nav-item"><a class="nav-link" href="leaderboard.html">Leaderboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
         </menu>
       </nav>
-
-      <hr />
     </header>
 
-    <main>
+    <main class="bg-secondary">
       <div class="players">
         Player:
         <span class="player-name">Guest</span>
       </div>
 
-      <br />
+      <div class="game-status">
+        <div class="stat">
+          <label for="movesSurvived">Moves survived</label>
+          <input type="text" id="movesSurvived" value="0" readonly />
+        </div>
 
-      <div>
-        <label for="movesSurvived">Moves survived</label>
-        <input type="text" id="movesSurvived" value="0" readonly />
+        <div class="stat">
+          <label for="moveClock">Move clock</label>
+          <input type="text" id="moveClock" value="0:30" readonly />
+        </div>
+
+        <div class="stat">
+          <button class="btn btn-outline-danger">Resign</button>
+          <button class="btn btn-primary">New Game</button>
+        </div>
       </div>
 
-      <div>
-        <label for="moveClock">Move clock</label>
-        <input type="text" id="moveClock" value="0:30" readonly />
-      </div>
-
-      <br />
-
-      <div>
-        <button>Resign</button>
-        <button>New Game</button>
-      </div>
-
-      <br />
-
-      <!-- Placeholder chessboard. No CSS/JS yet, so this is just the structure and starting position. -->
-      <table id="board" border="1" cellspacing="0" cellpadding="10">
+      <!-- Placeholder chessboard. Squares are colored with CSS (see play.css), not the bgcolor attribute. -->
+      <table id="board">
         <tr>
-          <td bgcolor="#eeeeee">♜</td>
-          <td bgcolor="#777777">♞</td>
-          <td bgcolor="#eeeeee">♝</td>
-          <td bgcolor="#777777">♛</td>
-          <td bgcolor="#eeeeee">♚</td>
-          <td bgcolor="#777777">♝</td>
-          <td bgcolor="#eeeeee">♞</td>
-          <td bgcolor="#777777">♜</td>
+          <td>♜</td>
+          <td>♞</td>
+          <td>♝</td>
+          <td>♛</td>
+          <td>♚</td>
+          <td>♝</td>
+          <td>♞</td>
+          <td>♜</td>
         </tr>
         <tr>
-          <td bgcolor="#777777">♟</td>
-          <td bgcolor="#eeeeee">♟</td>
-          <td bgcolor="#777777">♟</td>
-          <td bgcolor="#eeeeee">♟</td>
-          <td bgcolor="#777777">♟</td>
-          <td bgcolor="#eeeeee">♟</td>
-          <td bgcolor="#777777">♟</td>
-          <td bgcolor="#eeeeee">♟</td>
+          <td>♟</td>
+          <td>♟</td>
+          <td>♟</td>
+          <td>♟</td>
+          <td>♟</td>
+          <td>♟</td>
+          <td>♟</td>
+          <td>♟</td>
         </tr>
         <tr>
-          <td bgcolor="#eeeeee"></td>
-          <td bgcolor="#777777"></td>
-          <td bgcolor="#eeeeee"></td>
-          <td bgcolor="#777777"></td>
-          <td bgcolor="#eeeeee"></td>
-          <td bgcolor="#777777"></td>
-          <td bgcolor="#eeeeee"></td>
-          <td bgcolor="#777777"></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
         </tr>
         <tr>
-          <td bgcolor="#777777"></td>
-          <td bgcolor="#eeeeee"></td>
-          <td bgcolor="#777777"></td>
-          <td bgcolor="#eeeeee"></td>
-          <td bgcolor="#777777"></td>
-          <td bgcolor="#eeeeee"></td>
-          <td bgcolor="#777777"></td>
-          <td bgcolor="#eeeeee"></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
         </tr>
         <tr>
-          <td bgcolor="#eeeeee"></td>
-          <td bgcolor="#777777"></td>
-          <td bgcolor="#eeeeee"></td>
-          <td bgcolor="#777777"></td>
-          <td bgcolor="#eeeeee"></td>
-          <td bgcolor="#777777"></td>
-          <td bgcolor="#eeeeee"></td>
-          <td bgcolor="#777777"></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
         </tr>
         <tr>
-          <td bgcolor="#777777"></td>
-          <td bgcolor="#eeeeee"></td>
-          <td bgcolor="#777777"></td>
-          <td bgcolor="#eeeeee"></td>
-          <td bgcolor="#777777"></td>
-          <td bgcolor="#eeeeee"></td>
-          <td bgcolor="#777777"></td>
-          <td bgcolor="#eeeeee"></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
         </tr>
         <tr>
-          <td bgcolor="#eeeeee">♙</td>
-          <td bgcolor="#777777">♙</td>
-          <td bgcolor="#eeeeee">♙</td>
-          <td bgcolor="#777777">♙</td>
-          <td bgcolor="#eeeeee">♙</td>
-          <td bgcolor="#777777">♙</td>
-          <td bgcolor="#eeeeee">♙</td>
-          <td bgcolor="#777777">♙</td>
+          <td>♙</td>
+          <td>♙</td>
+          <td>♙</td>
+          <td>♙</td>
+          <td>♙</td>
+          <td>♙</td>
+          <td>♙</td>
+          <td>♙</td>
         </tr>
         <tr>
-          <td bgcolor="#777777">♖</td>
-          <td bgcolor="#eeeeee">♘</td>
-          <td bgcolor="#777777">♗</td>
-          <td bgcolor="#eeeeee">♕</td>
-          <td bgcolor="#777777">♔</td>
-          <td bgcolor="#eeeeee">♗</td>
-          <td bgcolor="#777777">♘</td>
-          <td bgcolor="#eeeeee">♖</td>
+          <td>♖</td>
+          <td>♘</td>
+          <td>♗</td>
+          <td>♕</td>
+          <td>♔</td>
+          <td>♗</td>
+          <td>♘</td>
+          <td>♖</td>
         </tr>
       </table>
 
-      <br />
-
       <!-- WebSocket placeholder: realtime activity from other players -->
-      <h2>Live activity</h2>
-      <ul class="notification">
-        <li class="player-name">Ada started a new game</li>
-        <li class="player-name">Tim survived 42 moves and set a new personal best</li>
-        <li class="player-name">Priya's game ended at move 17</li>
-      </ul>
+      <div>
+        <h2>Live activity</h2>
+        <ul class="notification">
+          <li class="player-name">Ada started a new game</li>
+          <li class="player-name">Tim survived 42 moves and set a new personal best</li>
+          <li class="player-name">Priya's game ended at move 17</li>
+        </ul>
+      </div>
     </main>
 
-    <footer>
-      <hr />
-      <span class="text-reset">Maxwell Schmutz</span>
-      <br />
-      <a href="https://github.com/MaxwellaSchmutz/startup">GitHub</a>
+    <footer class="bg-dark text-white-50">
+      <div class="container-fluid">
+        <span class="text-reset">Maxwell Schmutz</span>
+        <a class="text-reset" href="https://github.com/MaxwellaSchmutz/startup">GitHub</a>
+      </div>
     </footer>
   </body>
 </html>
