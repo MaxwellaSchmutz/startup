@@ -174,3 +174,49 @@ Stockfish Survival's actual pages/content rather than duplicating the tutorial:
   doesn't link `play.css` — so the "Playing as: Guest" text was silently unstyled
   on the home page. Moved the rule into `main.css`.
 - Deployed with `./deployFiles.sh -k ~/.ssh/beatstockfish-key.pem -h beatstockfish.click -s startup`.
+
+### Response to a second round of CSS review feedback
+
+Got five more suggestions on the CSS deliverable. Verified each against the spec
+before touching anything - two held up, one was worth a smaller fix than what
+was suggested, and two were technically wrong, so I left the code as-is on those.
+
+Accepted:
+
+- **Contrast + DRY, combined.** `about.css`'s `.stat-rating` and `leaderboard.css`'s
+  top-row highlight both used the same `rgb(221, 148, 40)` gold, and both display it
+  on light backgrounds (`bg-light` and Bootstrap's `.table-warning`). Computed
+  contrast against those backgrounds is only ~2.3:1 - well under the 4.5:1 WCAG AA
+  minimum for normal-sized text. Defined a single `--accent-gold: rgb(133, 89, 24)`
+  custom property on `:root` in `main.css` (same hue, darkened enough for ~5.5:1
+  and ~5.8:1 contrast against those two backgrounds) and pointed both files at
+  `var(--accent-gold)` instead of repeating the literal RGB value.
+- **Dropped `!important` on the navbar override.** `menu { flex-direction: row
+  !important; }` needed `!important` because Bootstrap's `.navbar-nav` sets
+  `flex-direction: column` via a class selector, which beats a bare `menu` element
+  selector on specificity regardless of source order. Changed the selector to the
+  compound `menu.navbar-nav` (element + class), which outranks Bootstrap's
+  single-class selector on its own, so the `!important` could come off.
+
+Rejected, with reasoning:
+
+- **`<menu>` → `<ul>`.** The claim was that Bootstrap's CSS is "optimized for
+  `<ul>`," but Bootstrap styles navbars entirely by class (`.navbar-nav`), never by
+  tag name, and the HTML standard defines `<menu>` to have the same default
+  rendering and ARIA role as `<ul>`. There's no behavioral difference. It's also
+  literally what the course's own `simon-css` example uses
+  (`<menu class="navbar-nav">`), so switching away from it would be inconsistent
+  with the class's own reference implementation. Left as `<menu>`.
+- **`flex: 1 calc(100vh - 110px)` "ambiguity."** The suggestion assumed the
+  calc() was being parsed as the *shrink* factor and proposed `flex: 1 0
+  calc(...)`. Per the CSS flexbox spec, a two-value `flex: <number> <length>`
+  shorthand is unambiguous: the second value can only be `flex-basis` (a
+  `<number>` there would mean shrink; a length/calc can't), so this was already
+  being parsed as grow=1, basis=calc(...), shrink=1 (default) - exactly what
+  the suggestion wanted, just implicit. Their proposed value would have actually
+  *changed* behavior by setting shrink to 0, which risks reintroducing overflow
+  at borderline viewport heights - the opposite of what we want. Instead, wrote
+  all three flex values out explicitly (`flex: 1 1 calc(100vh - 110px)`, and
+  `flex: 0 1 80px`/`flex: 0 1 30px` on header/footer) so the existing behavior is
+  spelled out instead of relying on shorthand disambiguation, with no behavior
+  change.

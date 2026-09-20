@@ -10,6 +10,6 @@ td {
 }
 
 tbody tr:first-child td {
-  color: rgb(221, 148, 40);
+  color: var(--accent-gold);
   font-weight: bold;
 }

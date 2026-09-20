@@ -23,7 +23,7 @@
 }
 
 .stat-rating {
-  color: rgb(221, 148, 40);
+  color: var(--accent-gold);
   font-weight: bold;
 }
 
