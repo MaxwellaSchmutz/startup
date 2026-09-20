@@ -1,0 +1,15 @@
+.table {
+  table-layout: fixed;
+}
+
+td {
+  max-width: 40vw;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+tbody tr:first-child td {
+  color: rgb(221, 148, 40);
+  font-weight: bold;
+}

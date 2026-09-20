@@ -1,0 +1,83 @@
+.players {
+  width: 100%;
+  padding: 0.5em;
+}
+
+.game-status label {
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+}
+
+.game-status {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1em;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-status .stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.game-status input {
+  text-align: center;
+  font-family: monospace;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: rgb(246, 239, 158);
+  background: #222;
+  border: solid thin rgb(90, 90, 90);
+  border-radius: 5px;
+  width: 6em;
+}
+
+/* Chessboard rendered with pure CSS instead of the bgcolor attribute on each td */
+#board {
+  border-collapse: collapse;
+  width: min(90vw, 500px);
+  aspect-ratio: 1 / 1;
+  table-layout: fixed;
+  margin: 0 auto;
+  border: 4px solid rgb(60, 40, 20);
+}
+
+#board td {
+  text-align: center;
+  vertical-align: middle;
+  font-size: min(8vw, 44px);
+  line-height: 1;
+}
+
+#board tr:nth-child(odd) td:nth-child(odd),
+#board tr:nth-child(even) td:nth-child(even) {
+  background-color: #eeeeee;
+}
+
+#board tr:nth-child(odd) td:nth-child(even),
+#board tr:nth-child(even) td:nth-child(odd) {
+  background-color: #777777;
+}
+
+#player-messages,
+.notification {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  opacity: 0.85;
+  text-align: left;
+}
+
+.notification li {
+  padding: 0.15em 0;
+}
+
+@media (orientation: portrait) {
+  .game-status {
+    flex-direction: column;
+  }
+}

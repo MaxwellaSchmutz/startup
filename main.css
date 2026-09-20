@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap');
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-width: 375px;
+  margin: 0;
+}
+
+h2,
+.navbar-brand {
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.02em;
+}
+
+.player-name {
+  color: rgb(118, 190, 210);
+}
+
+header {
+  flex: 0 80px;
+}
+
+main {
+  flex: 1 calc(100vh - 110px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1em;
+  padding: 1em;
+  text-align: center;
+}
+
+footer {
+  flex: 0 30px;
+}
+
+.navbar {
+  /* keep brand + links on one row instead of wrapping to a second line and
+     getting covered by main content, which only reserves a fixed 80px */
+  flex-wrap: nowrap;
+}
+
+menu {
+  flex: 1;
+  display: flex;
+  /* overwrite Bootstrap so the menu does not wrap to a column on small screens */
+  flex-direction: row !important;
+  flex-wrap: nowrap;
+  list-style: none;
+  /* fall back to a horizontal scroll, contained within the nav bar, instead
+     of letting nav content overflow the page on very narrow viewports */
+  overflow-x: auto;
+}
+
+.navbar-brand {
+  padding-left: 0.3em;
+  border-bottom: solid rgb(182, 182, 182) thin;
+  white-space: nowrap;
+}
+
+menu .nav-item {
+  padding: 0 0.3em;
+}
+
+menu .nav-link {
+  white-space: nowrap;
+}
+
+footer a {
+  float: right;
+}
+
+@media (max-width: 480px) {
+  .navbar-brand {
+    font-size: 1rem;
+    margin-right: 0.5rem;
+  }
+  menu .nav-link {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-height: 600px) {
+  header {
+    display: none;
+  }
+  footer {
+    display: none;
+  }
+  main {
+    flex: 1 100vh;
+  }
+}
