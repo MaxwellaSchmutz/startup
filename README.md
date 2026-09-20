@@ -133,14 +133,14 @@ For this deliverable I did the following.
 
 ## 🚀 CSS deliverable
 
-For this deliverable I did the following.
+For this deliverable I did the following. Checked items map directly to the grading rubric's six CSS criteria.
 
-- [ ] **Header, footer, and main content body** - I did not complete this part of the deliverable.
-- [ ] **Navigation elements** - I did not complete this part of the deliverable.
-- [ ] **Responsive to window resizing** - I did not complete this part of the deliverable.
-- [ ] **Application elements** - I did not complete this part of the deliverable.
-- [ ] **Application text content** - I did not complete this part of the deliverable.
-- [ ] **Application images** - I did not complete this part of the deliverable.
+- [x] **Visually appealing colors and layout; no overflowing elements** - A consistent dark theme (`bg-dark`/`text-light`) runs across all four pages, with a coordinated gold accent (`rgb(221, 148, 40)`) reused for the leaderboard's top row and the Chess.com rating, and a light-blue accent (`rgb(118, 190, 210)`) for the player name. Overflow is handled deliberately in several places: the chessboard sizes itself with `min(90vw, 500px)` and its glyphs with `min(8vw, 44px)` so it always fits and stays square; the leaderboard table uses `table-layout: fixed` plus per-cell `max-width`/`text-overflow: ellipsis` so long names (tested with `도윤 이`) truncate instead of breaking the layout; and the nav bar (`main.css`) is forced to `flex-wrap: nowrap` with `overflow-x: auto` as a contained horizontal-scroll fallback, so it can never wrap into a second line that covers page content on very narrow screens.
+- [x] **Use of a CSS framework (Bootstrap 5.3.3)** - Loaded via CDN in every page's `<head>` (loaded *before* the page's own stylesheets so local overrides reliably win). Used for the navbar, buttons (`btn btn-primary`, `btn btn-outline-danger`), form controls (`input-group`, `form-control`), the leaderboard table (`table table-warning table-striped-columns`, `table-dark` header), and layout/utility classes (`container-fluid`, `bg-dark`, `text-light`, etc.) throughout.
+- [x] **All visual elements styled using CSS** - Every element type has deliberate styling: header/nav/footer, buttons and form inputs, headings, body text, the wireframe image, the leaderboard table, the fully custom CSS-drawn chessboard (no `bgcolor` attributes), the live-activity notification list, and form labels.
+- [x] **Responsive to window resizing (flexbox)** - `main.css` uses flex to size header/main/footer and to keep the nav row from collapsing; `play.css` uses flex for the game-status row that switches to a column in `@media (orientation: portrait)`; `@media (max-height: 600px)` hides the header/footer so the board gets full-screen space on short viewports; and a narrow-width media query (`max-width: 480px`) shrinks the nav's font size/padding so it fits without scrolling on virtually all phone widths.
+- [x] **Use of an imported font** - Google Fonts' `Cinzel` (a serif display face, weights 600/700) is imported in `main.css` and applied to the site's `<h2>` headings and the `.navbar-brand` wordmark, giving the chess theme a distinct look from Bootstrap's default sans-serif.
+- [x] **Different selector types** - Element (`body`, `header`, `td`), class (`.navbar-brand`, `.stat-box`, `.game-status`), ID (`#board`, `#picture`), and pseudo-class (`:nth-child`, `:first-child`) selectors are all used across `main.css`/`about.css`/`leaderboard.css`/`play.css`.
 
 ## 🚀 React Phase 1: Routing deliverable
 
