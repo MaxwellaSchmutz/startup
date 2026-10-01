@@ -95,6 +95,37 @@ own page names/content instead of Simon's.
   added `table-layout: fixed` on the `<table>` itself after the rubric review
   flagged that `max-width` on auto-layout table cells is unreliable without it).
 
+## Simon React Phase 1: Routing
+
+Ported `webprogramming260/simon-css` (snapshot `03dbd4c`) to Vite + React in
+this repo's `simon/` folder, so all course work stays in one repo. Each porting
+step from the instructions is its own commit (Install Vite → Reorganize →
+React Bootstrap → Enable React → App component → view stubs → router → one
+commit per converted page → deployReact.sh), which is the same commit-per-step
+rhythm to use when porting the startup.
+
+- **MPA → SPA**: one `index.html` with `<div id="root">` + root `index.jsx`
+  that renders `src/app.jsx`. The old `index.html` became `login.html`, then
+  was converted into `src/login/login.jsx` and deleted, same for each page.
+- **Router**: `BrowserRouter` wraps the app, `<a href="play.html">` became
+  `<NavLink to="play">`, and `<Routes>` replaced `<main>`, with a `*` route
+  rendering `NotFound` ("404: Return to sender...").
+- **JSX gotchas hit**: `class` → `className`; `body` selector → `.body` since
+  React renders inside a `<div>`; JSX drops whitespace between inline elements
+  (Login/Create buttons, "Player:" label) so it needs explicit `{' '}`; images
+  live in `public/` and are referenced as `/placeholder.jpg` so they work on
+  any route.
+- **Windows gotcha**: `deployReact.sh` must have LF line endings or bash on the
+  server/Git Bash chokes, so `simon/.gitattributes` forces `*.sh eol=lf`.
+- **Deploy**: from `simon/`, run
+  `./deployReact.sh -k ~/.ssh/beatstockfish-key.pem -h beatstockfish.click -s simon`
+  (it runs `npm install` + `npm run build` and ships `dist/`). Because
+  `BrowserRouter` uses real paths, opening `/play` directly needs Caddy to fall
+  back to `index.html`: add `try_files {path} /index.html` to the
+  `simon.beatstockfish.click` block (done 2026-10-01; backup at
+  `/etc/caddy/Caddyfile.bak-simon-react`).
+- Live at <https://simon.beatstockfish.click> (deep links like `/play` work).
+
 ## Startup HTML deliverable
 
 - Built the actual HTML structure for Stockfish Survival (not the Simon tutorial):
