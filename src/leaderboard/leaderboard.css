@@ -1,0 +1,17 @@
+.table {
+  table-layout: fixed;
+}
+
+/* scoped to .table: in the SPA every component's CSS is bundled together, so a
+   bare td selector would also truncate the chessboard squares on the Play view */
+.table td {
+  max-width: 40vw;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.table tbody tr:first-child td {
+  color: var(--accent-gold);
+  font-weight: bold;
+}

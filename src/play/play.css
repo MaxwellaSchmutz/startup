@@ -47,6 +47,11 @@
 }
 
 #board td {
+  /* every rank is 1/8 of the board, so the empty middle ranks don't collapse */
+  height: calc(min(90vw, 500px) / 8);
+  padding: 0;
+  /* dark ink on both square colors; the inherited text-light made the black pieces look white */
+  color: #111;
   text-align: center;
   vertical-align: middle;
   font-size: min(8vw, 44px);
