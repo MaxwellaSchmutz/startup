@@ -251,3 +251,29 @@ Rejected, with reasoning:
   `flex: 0 1 80px`/`flex: 0 1 30px` on header/footer) so the existing behavior is
   spelled out instead of relying on shorthand disambiguation, with no behavior
   change.
+
+## Startup React Phase 1: Routing
+
+Ported Stockfish Survival to Vite + React at the repo root using the same steps
+(and one commit per step) as the Simon port in `simon/`.
+
+- `index.html` became `login.html`, then `src/login/login.jsx`; `play.html`,
+  `leaderboard.html`, `about.html` became `src/play`, `src/leaderboard`,
+  `src/about` components, each importing its own CSS. `src/notfound/notfound.jsx`
+  handles unknown routes. Header/nav/footer now exist once in `src/app.jsx`.
+- **SPA CSS gotcha**: Vite bundles every component's CSS into one global
+  stylesheet, so page-specific bare selectors leak across views. The leaderboard's
+  `td { white-space: nowrap; max-width: 40vw }` would have hit the chessboard, so
+  it's now scoped to `.table td`.
+- **Board fix**: the empty middle ranks collapsed to thin strips (true of the old
+  `play.html` too) and `text-light` made the black pieces look white. Fixed with a
+  `height: calc(min(90vw, 500px) / 8)` and `color: #111` on `#board td`.
+- **React details**: `for` → `htmlFor`, `readonly` → `readOnly`, `<tr>` needs a
+  `<tbody>` parent, and React Bootstrap `Button`s default to `type="button"`, so the
+  login/Chess.com `<form>`s don't submit until Phase 2 adds handlers.
+- **Grader feedback applied to Simon**: dropped `exact` (React Router v6+ doesn't
+  use it) and moved `NotFound` into `simon/src/notfound/notfound.jsx`.
+- Deployed with `./deployReact.sh -k ~/.ssh/beatstockfish-key.pem -h beatstockfish.click -s startup`,
+  and added `try_files {path} /index.html` to the `startup.beatstockfish.click`
+  Caddy block (backup at `/etc/caddy/Caddyfile.bak-startup-react`) so deep links
+  work. Live at <https://startup.beatstockfish.click>.

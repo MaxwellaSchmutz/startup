@@ -21,7 +21,7 @@ Most people are not going to beat Stockfish, but that does not mean playing it c
 
 ### Design
 
-![Rough wireframe of the login, game, and leaderboard views](stockfish-survival-wireframe.png)
+![Rough wireframe of the login, game, and leaderboard views](public/stockfish-survival-wireframe.png)
 
 The application will have three main views: authentication/home, the chess game, and the leaderboard. The game view keeps the chessboard as the main focus and shows the current number of moves survived and the move clock. The leaderboard shows the best completed attempts.
 
@@ -146,9 +146,9 @@ For this deliverable I did the following. Checked items map directly to the grad
 
 For this deliverable I did the following.
 
-- [ ] **Bundled using Vite** - I did not complete this part of the deliverable.
-- [ ] **Components** - I did not complete this part of the deliverable.
-- [ ] **Router** - I did not complete this part of the deliverable.
+- [x] **Bundled using Vite** - The startup is now a Vite project: `package.json` has the `dev`/`build`/`preview` scripts, the single `index.html` loads `index.jsx`, static assets live in `public/`, and `deployReact.sh` runs `npm run build` and deploys the `dist` bundle to <https://startup.beatstockfish.click>. The Simon tutorial port is the same setup in [`simon/`](simon), deployed to <https://simon.beatstockfish.click>.
+- [x] **Components** - Each old HTML page is now a React component in its own folder with its own CSS: `src/login/login.jsx`, `src/play/play.jsx`, `src/leaderboard/leaderboard.jsx`, `src/about/about.jsx`, plus `src/notfound/notfound.jsx`. The header, nav, and footer that every page used to repeat live once in `src/app.jsx`, and buttons use React Bootstrap's `Button`. The Play board is rendered by mapping over the starting position instead of 64 hand-written cells.
+- [x] **Router** - `src/app.jsx` wraps the app in `BrowserRouter`, the nav uses `NavLink` (with the active link highlighted), and `Routes` maps `/`, `/play`, `/leaderboard`, and `/about` to their components, with a `*` route for `NotFound`. Caddy falls back to `index.html` so deep links like `/play` work when opened directly.
 
 ## 🚀 React Phase 2: Reactivity
 
