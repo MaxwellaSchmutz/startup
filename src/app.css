@@ -4,7 +4,7 @@
   --accent-gold: rgb(133, 89, 24);
 }
 
-body {
+.body {
   display: flex;
   flex-direction: column;
   min-width: 375px;
