@@ -2,6 +2,8 @@
 
 [My Notes](notes.md)
 
+> **Simon React Phase 1: Routing** - this repository ports Simon CSS to a Vite + React single-page application with React Router. Run `npm install` then `npm run dev` to develop, and `./deployReact.sh -k <pem key file> -h <hostname> -s simon` to deploy.
+
 In 1978 Milton-Bradley, now Hasbro, released an electronic game named Simon. It was cutting edge at the time since there were so few electronic games, and all the cool kids had one.
 
 We are going to build a peer to peer multiplayer web application modeled after Simon. We will build it together by adding new functionality every time we learn a new technology. The example version of code and production deployment for each iteration are available to you. Your job will be to review the example and then deploy it to your production environment. The goal is to make you think about every line of code. Ask, "why is it done this way?" and "Is there a better way?". You can then take what you have learned, or even portions of the Simon code, and apply it to your Startup application.

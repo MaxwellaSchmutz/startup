@@ -15,7 +15,7 @@ export function Login() {
             <span className="input-group-text">🔒</span>
             <input className="form-control" type="password" placeholder="password" />
           </div>
-          <Button variant="primary">Login</Button>
+          <Button variant="primary">Login</Button>{' '}
           <Button variant="secondary">Create</Button>
         </div>
       </div>

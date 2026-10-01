@@ -7,7 +7,7 @@ export function Play() {
   return (
     <main className="bg-secondary">
       <div className="players">
-        Player
+        Player{' '}
         <span className="player-name">Mystery player</span>
         <div id="player-messages">
           <div className="event">
