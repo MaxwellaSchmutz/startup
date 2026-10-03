@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import { MessageDialog } from './messageDialog';
 import { createAccount, login } from './authService';
@@ -59,6 +59,10 @@ export function Unauthenticated({ userName, onLogin }) {
           Create Account
         </Button>
       </form>
+
+      <p className="guest-play">
+        Just want to try it? <Link to="/play">Play as a guest</Link> (guest games are not saved to the leaderboard).
+      </p>
 
       <MessageDialog message={displayError} onHide={() => setDisplayError(null)} />
     </div>

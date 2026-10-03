@@ -2,7 +2,7 @@ import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './app.css';
 
-import { BrowserRouter, Navigate, NavLink, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom';
 import { Login } from './login/login';
 import { Play } from './play/play';
 import { Leaderboard } from './leaderboard/leaderboard';
@@ -13,7 +13,8 @@ import { currentUser, displayName } from './login/authService';
 
 export default function App() {
   // Lifted state: Login changes who is logged in, and App needs to know so it
-  // can decide which nav links to show and whether /play is reachable.
+  // can show the player's name and pass it to Play. Anyone can play; only
+  // logged-in players get their games saved to the leaderboard.
   const [userName, setUserName] = React.useState(currentUser());
   const [authState, setAuthState] = React.useState(userName ? AuthState.Authenticated : AuthState.Unauthenticated);
   const authenticated = authState === AuthState.Authenticated;
@@ -30,13 +31,11 @@ export default function App() {
                   Home
                 </NavLink>
               </li>
-              {authenticated && (
-                <li className="nav-item">
-                  <NavLink className="nav-link" to="play">
-                    Play
-                  </NavLink>
-                </li>
-              )}
+              <li className="nav-item">
+                <NavLink className="nav-link" to="play">
+                  Play
+                </NavLink>
+              </li>
               <li className="nav-item">
                 <NavLink className="nav-link" to="leaderboard">
                   Leaderboard
@@ -66,7 +65,7 @@ export default function App() {
               />
             }
           />
-          <Route path="/play" element={authenticated ? <Play userName={userName} /> : <Navigate to="/" replace />} />
+          <Route path="/play" element={<Play userName={authenticated ? userName : ''} />} />
           <Route path="/leaderboard" element={<Leaderboard userName={userName} />} />
           <Route path="/about" element={<About />} />
           <Route path="*" element={<NotFound />} />

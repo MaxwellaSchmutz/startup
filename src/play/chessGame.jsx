@@ -5,6 +5,7 @@ import { ChessBoard } from './chessBoard';
 import { getEngineMove } from './engine';
 import { GameEvent, GameNotifier } from './gameNotifier';
 import { saveScore } from '../leaderboard/scores';
+import { Link } from 'react-router-dom';
 import { displayName } from '../login/authService';
 
 const moveSeconds = 30;
@@ -31,7 +32,12 @@ function kingSquare(chess, color) {
   return null;
 }
 
+// userName is empty for a guest: guests can play, but only logged-in players
+// get their games saved to the leaderboard and announced in the live feed.
 export function ChessGame({ userName }) {
+  const isGuest = !userName;
+  const playerName = isGuest ? 'Guest' : displayName(userName);
+
   // The chess.js instance holds the rules and move history; React state holds
   // everything the UI renders. fen changes after every move, which re-renders
   // the board and re-runs the effects below.
@@ -55,9 +61,10 @@ export function ChessGame({ userName }) {
     setStatus('over');
     setResult(reason);
     setSelected(null);
+    if (isGuest) return;
     const score = { name: userName, moves, result: reason, date: new Date().toLocaleDateString() };
     saveScore(score);
-    GameNotifier.broadcastEvent(displayName(userName), GameEvent.End, score);
+    GameNotifier.broadcastEvent(playerName, GameEvent.End, score);
   }
 
   function gameOverReason() {
@@ -75,7 +82,7 @@ export function ChessGame({ userName }) {
 
     if (status === 'ready') {
       setStatus('playing');
-      GameNotifier.broadcastEvent(displayName(userName), GameEvent.Start);
+      if (!isGuest) GameNotifier.broadcastEvent(playerName, GameEvent.Start);
     }
     if (game.isGameOver()) {
       endGame(gameOverReason(), moves);
@@ -149,7 +156,7 @@ export function ChessGame({ userName }) {
   return (
     <>
       <div className="players">
-        Player: <span className="player-name">{displayName(userName)}</span>
+        Player: <span className="player-name">{playerName}</span>
       </div>
 
       <div className="game-status">
@@ -182,6 +189,11 @@ export function ChessGame({ userName }) {
       <div className={`game-message ${status === 'over' ? 'game-over' : ''}`} role="status">
         {statusText}
         {status === 'over' && ` You survived ${movesSurvived} move${movesSurvived === 1 ? '' : 's'}.`}
+        {isGuest && (
+          <div className="guest-note">
+            Playing as a guest. <Link to="/">Log in or create an account</Link> to put your games on the leaderboard.
+          </div>
+        )}
       </div>
 
       <ChessBoard
