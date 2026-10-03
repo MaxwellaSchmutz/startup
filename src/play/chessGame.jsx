@@ -2,7 +2,7 @@ import React from 'react';
 import Button from 'react-bootstrap/Button';
 import { Chess } from 'chess.js';
 import { ChessBoard } from './chessBoard';
-import { getEngineMove } from './engine';
+import { getEngineMove, preloadEngine } from './engine';
 import { GameEvent, GameNotifier } from './gameNotifier';
 import { saveScore } from '../leaderboard/scores';
 import { Link } from 'react-router-dom';
@@ -112,7 +112,13 @@ export function ChessGame({ userName }) {
     setResult('');
   }
 
-  // Engine's turn: ask the (mock) engine for a move. If the game is reset or
+  // Start loading Stockfish as soon as the board appears, so it's ready by
+  // the time the player makes the first move.
+  React.useEffect(() => {
+    preloadEngine();
+  }, []);
+
+  // Engine's turn: ask Stockfish for a move. If the game is reset or
   // the component unmounts while it "thinks", the stale answer is ignored.
   React.useEffect(() => {
     if (status !== 'playing' || game.turn() !== 'b') return;

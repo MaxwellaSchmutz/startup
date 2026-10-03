@@ -346,3 +346,35 @@ mocked where a later deliverable will supply the real thing.
 - Tested end to end with playwright-core driving Edge: login errors, account
   creation, a full game to checkmate, a clock timeout, the leaderboard, the
   Chess.com lookup, reload persistence, and logout.
+
+### Guest play and real Stockfish (WebAssembly)
+
+- **Guest play**: anyone can play, but only logged-in players' games are saved
+  to the leaderboard and broadcast to the live feed. That keeps something
+  meaningful behind authentication (the Login deliverable grades restricting
+  functionality by auth state), and it's the part that should need an account
+  anyway, since the leaderboard is the competitive part.
+- **Stockfish in the browser**: the `stockfish` npm package (Stockfish.js) ships
+  several builds. The full NNUE build is about 99 MB, and the multi-threaded
+  builds need `SharedArrayBuffer`, which means cross-origin isolation headers
+  (COOP/COEP) from the server. The **lite single-threaded** build is a 1.8 MB
+  `.wasm` plus a 21 KB loader and needs no special headers, and it's still far
+  stronger than any human. I copied just those two files (and the GPL license)
+  into `public/stockfish/` instead of adding the whole 200 MB package as a
+  dependency.
+- **UCI over a Web Worker**: `new Worker('/stockfish/stockfish-19-lite-single.js')`,
+  then `postMessage('uci')` → wait for `uciok`, `isready` → `readyok`, then
+  `position fen <fen>` + `go nodes 60000` → `bestmove e7e5 ...`. The loader finds
+  its `.wasm` next to itself.
+- **Nodes, not time**: `go movetime` would make it weaker on slow phones.
+  `go nodes` is the same work everywhere, so every player faces the same
+  opponent. Measured in Edge: about 0.2 s to load, about 400k nodes/s, so a
+  60k-node move takes about 0.15 s.
+- **One search at a time**: if New Game is pressed mid-search, the old
+  `bestmove` still arrives later. Chaining searches on a promise queue means a
+  new request can't mistake the old answer for its own.
+- **Graceful fallback**: if the worker fails (blocked, old browser), the old
+  minimax in `fallbackEngine.js` plays instead. I tested this by blocking
+  `/stockfish/**` in Playwright.
+- **GPL**: Stockfish is GPLv3, so the license ships alongside it and the About
+  page credits it with source links.

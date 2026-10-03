@@ -48,6 +48,22 @@ export function About() {
 
       <p>Every game ends the same three ways: checkmate, resignation, or running out of time on the move clock.</p>
 
+      <p className="engine-credit">
+        Your opponent is{' '}
+        <a className="text-reset" href="https://github.com/official-stockfish/Stockfish">
+          Stockfish 19
+        </a>
+        , running right in your browser as WebAssembly thanks to{' '}
+        <a className="text-reset" href="https://github.com/nmrugg/stockfish.js">
+          Stockfish.js
+        </a>
+        . Both are free software under the{' '}
+        <a className="text-reset" href="/stockfish/COPYING.txt">
+          GNU GPL v3
+        </a>
+        .
+      </p>
+
       <div>
         {/* Third party service: Chess.com PubAPI lookup (mocked in chesscomService.js) */}
         <h2>Look up a Chess.com player</h2>

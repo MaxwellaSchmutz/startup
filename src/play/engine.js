@@ -1,84 +1,116 @@
-import { Chess } from 'chess.js';
+import { chooseMove } from './fallbackEngine';
 
-// Mocked opponent. The real game will ask a Stockfish service for its move;
-// until then this small minimax search (2 plies, material plus a nudge toward
-// the center) stands in. It always plays black. It grabs hanging pieces and
-// finds mate in one, which is enough to end most games eventually.
+// The opponent: real Stockfish 19, compiled to WebAssembly and running in a
+// Web Worker in the player's own browser (files in public/stockfish/). We talk
+// to it with the standard UCI text protocol: "position fen ..." then "go ...",
+// and it answers "bestmove e7e5". If the engine can't start, the small minimax
+// in fallbackEngine.js plays instead so the game still works.
 
-const pieceValues = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
-const mateScore = 100000;
-const searchDepth = 2;
+const enginePath = '/stockfish/stockfish-19-lite-single.js';
 
-function centerBonus({ square, type }) {
-  if (type === 'k' || type === 'q') return 0;
-  const file = square.charCodeAt(0) - 97;
-  const rank = Number(square[1]) - 1;
-  const centrality = 7 - (Math.abs(file - 3.5) + Math.abs(rank - 3.5));
-  return centrality * (type === 'p' ? 3 : 5);
+// A fixed amount of search work per move (not a time limit), so Stockfish plays
+// at the same strength on a fast laptop and a slow phone, keeping every
+// player's score comparable. Even this small budget is far beyond human level.
+const searchNodes = 60000;
+const minThinkMs = 400; // instant replies feel jarring
+const startupTimeoutMs = 20000;
+const searchTimeoutMs = 20000;
+
+let engine = null; // { send, waitFor, ready }
+let engineFailed = false;
+let queue = Promise.resolve();
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Positive scores favor black (the engine).
-function evaluate(chess, plyFromRoot) {
-  if (chess.isCheckmate()) {
-    // prefer faster mates and slower losses
-    return chess.turn() === 'b' ? -mateScore + plyFromRoot : mateScore - plyFromRoot;
-  }
-  if (chess.isDraw()) return 0;
+function startEngine() {
+  if (engine) return engine;
 
-  let score = 0;
-  for (const row of chess.board()) {
-    for (const piece of row) {
-      if (piece) {
-        const value = pieceValues[piece.type] + centerBonus(piece);
-        score += piece.color === 'b' ? value : -value;
-      }
-    }
-  }
-  return score;
+  const worker = new Worker(enginePath);
+  const listeners = new Set();
+  let workerError = null;
+
+  worker.onmessage = (e) => listeners.forEach((listener) => listener(String(e.data)));
+  worker.onerror = (e) => {
+    workerError = new Error(`Stockfish worker failed: ${e.message || 'could not load'}`);
+    listeners.forEach((listener) => listener(null));
+  };
+
+  const send = (command) => worker.postMessage(command);
+
+  // Resolves with the first line from the engine that matches.
+  const waitFor = (matches, timeoutMs) =>
+    new Promise((resolve, reject) => {
+      const listener = (line) => {
+        if (line === null || workerError) {
+          cleanup();
+          reject(workerError);
+        } else if (matches(line)) {
+          cleanup();
+          resolve(line);
+        }
+      };
+      const timer = setTimeout(() => {
+        cleanup();
+        reject(new Error('Stockfish did not respond in time'));
+      }, timeoutMs);
+      const cleanup = () => {
+        clearTimeout(timer);
+        listeners.delete(listener);
+      };
+      listeners.add(listener);
+    });
+
+  const ready = (async () => {
+    const uciOk = waitFor((line) => line === 'uciok', startupTimeoutMs);
+    send('uci');
+    await uciOk;
+    const readyOk = waitFor((line) => line === 'readyok', startupTimeoutMs);
+    send('isready');
+    await readyOk;
+  })();
+
+  engine = { send, waitFor, ready };
+  return engine;
 }
 
-function minimax(chess, depth, alpha, beta, plyFromRoot) {
-  if (depth === 0 || chess.isGameOver()) {
-    return evaluate(chess, plyFromRoot);
-  }
-
-  const maximizing = chess.turn() === 'b';
-  let best = maximizing ? -Infinity : Infinity;
-  for (const move of chess.moves({ verbose: true })) {
-    chess.move(move);
-    const score = minimax(chess, depth - 1, alpha, beta, plyFromRoot + 1);
-    chess.undo();
-
-    if (maximizing) {
-      best = Math.max(best, score);
-      alpha = Math.max(alpha, score);
-    } else {
-      best = Math.min(best, score);
-      beta = Math.min(beta, score);
-    }
-    if (beta <= alpha) break;
-  }
-  return best;
+// "e7e8q" -> { from: 'e7', to: 'e8', promotion: 'q' }
+function parseBestMove(line) {
+  const uci = line.split(' ')[1];
+  return { from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] };
 }
 
-export function chooseMove(fen) {
-  const chess = new Chess(fen);
-  const scored = chess.moves({ verbose: true }).map((move) => {
-    chess.move(move);
-    const score = minimax(chess, searchDepth - 1, -Infinity, Infinity, 1);
-    chess.undo();
-    return { move, score };
+async function stockfishMove(fen) {
+  const { send, waitFor, ready } = startEngine();
+  await ready;
+  const bestMove = waitFor((line) => line.startsWith('bestmove'), searchTimeoutMs);
+  send(`position fen ${fen}`);
+  send(`go nodes ${searchNodes}`);
+  return parseBestMove(await bestMove);
+}
+
+// Start downloading and initializing the engine before the first move.
+export function preloadEngine() {
+  if (engineFailed) return;
+  startEngine().ready.catch(() => {});
+}
+
+// Black's reply to the position. Searches run one at a time: if a new game
+// starts while Stockfish is still thinking, the next search waits for the old
+// one to finish, so a stale "bestmove" can never be mistaken for the new one.
+export function getEngineMove(fen) {
+  const search = queue.then(async () => {
+    const [move] = await Promise.all([fen && !engineFailed ? stockfishMove(fen) : null, delay(minThinkMs)]);
+    return move;
   });
+  queue = search.catch(() => {});
 
-  // pick randomly among moves within 15 centipawns of the best so games vary
-  const bestScore = Math.max(...scored.map((s) => s.score));
-  const candidates = scored.filter((s) => s.score >= bestScore - 15);
-  const { move } = candidates[Math.floor(Math.random() * candidates.length)];
-  return { from: move.from, to: move.to, promotion: move.promotion };
-}
-
-// Async like the future service call, with a short "thinking" pause.
-export async function getEngineMove(fen) {
-  await new Promise((resolve) => setTimeout(resolve, 400 + Math.random() * 500));
-  return chooseMove(fen);
+  return search.catch((err) => {
+    if (!engineFailed) {
+      engineFailed = true;
+      console.warn('Stockfish unavailable, using the built-in fallback engine.', err);
+    }
+    return null;
+  }).then((move) => move ?? chooseMove(fen));
 }
