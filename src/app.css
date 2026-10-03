@@ -101,3 +101,9 @@ footer a {
     flex: 1 100vh;
   }
 }
+
+/* logged-in player's name at the right end of the nav bar */
+.nav-user {
+  padding: 0 0.5em;
+  white-space: nowrap;
+}

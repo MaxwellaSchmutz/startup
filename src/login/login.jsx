@@ -1,7 +1,10 @@
 import React from 'react';
-import Button from 'react-bootstrap/Button';
+import { Authenticated } from './authenticated';
+import { Unauthenticated } from './unauthenticated';
+import { AuthState } from './authState';
+import { displayName } from './authService';
 
-export function Login() {
+export function Login({ userName, authState, onAuthChange }) {
   return (
     <main className="bg-secondary">
       <p>Survive as many moves as you can against the engine.</p>
@@ -19,24 +22,19 @@ export function Login() {
         </a>
       </p>
 
-      <div>
-        <h2>Login or create an account</h2>
-        {/* Login placeholder: the buttons (type="button" by default) get wired up to the auth endpoints in React Phase 2 */}
-        <form>
-          <div className="input-group mb-3">
-            <span className="input-group-text">@</span>
-            <input className="form-control" type="email" id="email" name="email" placeholder="your@email.com" />
-          </div>
-          <div className="input-group mb-3">
-            <span className="input-group-text">🔒</span>
-            <input className="form-control" type="password" id="password" name="password" placeholder="password" />
-          </div>
-          <Button variant="primary">Login</Button> <Button variant="secondary">Create Account</Button>
-        </form>
-      </div>
+      {authState === AuthState.Authenticated && (
+        <Authenticated userName={userName} onLogout={() => onAuthChange('', AuthState.Unauthenticated)} />
+      )}
+      {authState === AuthState.Unauthenticated && (
+        <Unauthenticated
+          userName={userName}
+          onLogin={(loginUserName) => onAuthChange(loginUserName, AuthState.Authenticated)}
+        />
+      )}
 
       <div id="current-player">
-        <span>Playing as:</span> <span className="player-name">Guest</span>
+        <span>Playing as:</span>{' '}
+        <span className="player-name">{authState === AuthState.Authenticated ? displayName(userName) : 'Guest'}</span>
       </div>
     </main>
   );
