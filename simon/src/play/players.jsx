@@ -20,7 +20,7 @@ export function Players(props) {
     setEvent((prevEvents) => {
       let newEvents = [event, ...prevEvents];
       if (newEvents.length > 10) {
-        newEvents = newEvents.slice(1, 10);
+        newEvents = newEvents.slice(0, 10);
       }
       return newEvents;
     });
