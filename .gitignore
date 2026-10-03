@@ -5,6 +5,7 @@ AGENTS.md
 # SSH keys - never commit
 *.pem
 assignment8th.txt
+oct22.txt
 
 # NPM packages and Vite build output
 node_modules

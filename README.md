@@ -152,10 +152,23 @@ For this deliverable I did the following.
 
 ## 🚀 React Phase 2: Reactivity
 
-For this deliverable I did the following.
+For this deliverable I did the following. Everything below is live at <https://startup.beatstockfish.click>, and the Simon React P2 prerequisite is deployed at <https://simon.beatstockfish.click> (code in [`simon/`](simon)).
 
-- [ ] **All functionality implemented or mocked out** - I did not complete this part of the deliverable.
-- [ ] **Hooks** - I did not complete this part of the deliverable.
+- [x] **All functionality implemented or mocked out** (multiple React components) - The app is fully playable end to end:
+  - **Login** (`src/login/`) - `Login` switches between an `Unauthenticated` form (email + password, Login / Create Account) and an `Authenticated` view (Play / Logout). Logging in takes you to the game, and errors such as an unknown email or a duplicate account appear in a React Bootstrap modal (`MessageDialog`). *Mocked:* `authService.js` keeps registered emails and the current user in localStorage (never the password) until the Login deliverable adds `/api/auth` endpoints.
+  - **App / navigation** (`src/app.jsx`) - Holds the logged-in user (state lifted up from Login). The Play link only appears when you're logged in, `/play` redirects home when you're not, and your name shows in the nav bar.
+  - **Play** (`src/play/`) - `ChessGame` is a real game of chess against the engine. Click a white piece to see its legal moves (dots, or rings for captures), click a destination to move, and the engine answers as black. The last move and a king in check are highlighted, and pawns promote to a queen. *Moves survived* counts your moves, and the 30-second *move clock* ticks down on your turn and ends the game at 0:00. **Resign** and **New Game** work, and checkmate, resignation, timeout, or a draw ends the game with a message and saves the score. Rules and move legality come from `chess.js`. `ChessBoard` is a presentational component that renders the position and the highlights. *Mocked:* `engine.js` is a small 2-ply minimax that stands in for Stockfish (it finds mate in one and punishes hanging pieces) behind an async `getEngineMove()` with a "thinking" delay, so it can be swapped for a Stockfish service call later.
+  - **Live activity** (`src/play/liveActivity.jsx`) - A feed of other players starting and finishing games, plus your own games in bold. *Mocked:* `gameNotifier.js` fakes the WebSocket feed with `setInterval` (running only while someone is listening), and your own game start/end events go through the same notifier.
+  - **Leaderboard** (`src/leaderboard/`) - Shows the top ten completed games by moves survived, marks your own games, and shows a "be the first" message when it's empty. *Mocked:* `scores.js` stores scores in localStorage until the DB deliverable.
+  - **About** (`src/about/`) - The Chess.com lookup works: type a username to see blitz rating, wins, losses, and draws, with a loading state and validation errors. *Mocked:* `chesscomService.js` returns hard-coded data shaped like the PubAPI `/pub/player/{username}/stats` response, after a simulated network delay.
+- [x] **Hooks** - `useState` holds every reactive value: the auth state and user in `App`, the form fields and error in `Unauthenticated`, the position, moves survived, clock, selection, last move, and result in `ChessGame`, the feed in `LiveActivity`, the scores in `Leaderboard`, and the lookup in `About`. `useEffect` handles lifecycle and timing:
+  - `ChessGame` requests the engine's reply when it's black's turn, and ignores a stale reply if the game is reset or the page is left.
+  - `ChessGame` ticks the move clock with an interval that is cleared on every move and on unmount, and a third effect ends the game when the clock reaches zero.
+  - `LiveActivity` subscribes to and unsubscribes from the notifier.
+  - `Leaderboard` loads the saved scores when it opens.
+  - `About` loads a default player when it opens.
+
+  `useRef` keeps the `chess.js` game instance across renders, and `useNavigate` moves you to `/play` after you log in.
 
 ## 🚀 Service deliverable
 

@@ -107,3 +107,10 @@ footer a {
   padding: 0 0.5em;
   white-space: nowrap;
 }
+
+/* no room for the name next to the links on phones; Home and Play show it */
+@media (max-width: 600px) {
+  .nav-user {
+    display: none;
+  }
+}

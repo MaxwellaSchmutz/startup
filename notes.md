@@ -277,3 +277,72 @@ Ported Stockfish Survival to Vite + React at the repo root using the same steps
   and added `try_files {path} /index.html` to the `startup.beatstockfish.click`
   Caddy block (backup at `/etc/caddy/Caddyfile.bak-startup-react`) so deep links
   work. Live at <https://startup.beatstockfish.click>.
+
+## Simon React Phase 2: Reactivity
+
+Brought the final `webprogramming260/simon-react` code into `simon/` over my
+Phase 1 port (keeping the Phase 1 grader fixes and the newer React 19 / React
+Router 7 deps, which it runs on unchanged), ran it, and stepped through it.
+
+- **Lifting state up**: `App` owns `userName`/`authState` and hands `Login` an
+  `onAuthChange` callback. Login changes it, App re-renders, and the nav shows
+  Play/Scores only when authenticated. Child → parent communication is just a
+  function prop.
+- **Refs to drive children**: `SimonButton` uses `forwardRef` +
+  `useImperativeHandle` to expose `press()`, so `SimonGame` can "push" buttons
+  to play back the sequence. That's the escape hatch when a parent needs to
+  call into a child instead of passing props down.
+- **Effects run after state actually changes**: `setSequence` is async, so the
+  sequence playback lives in `useEffect(..., [sequence])` instead of right after
+  the setter call.
+- **Bugs I found while studying it** (each fixed in its own commit):
+  - `removeHandler` called `filter` without assigning the result, so every
+    visit to Play leaked a handler.
+  - `Players` prepended the new event and then kept `slice(1, 10)`, which
+    dropped the newest event instead of the oldest.
+  - The scores table showed zero-based ranks.
+  - `Modal show` was given a string instead of a boolean.
+- **Functional updates**: `setEvent(prev => [event, ...prev])` matters inside a
+  handler registered once in `useEffect(..., [])`. A plain `events` reference
+  there is the stale value from the first render.
+- Redeployed with `deployReact.sh -s simon`. The game, sounds, scores, and
+  login/logout work live at <https://simon.beatstockfish.click>.
+
+## Startup React Phase 2: Reactivity
+
+Made Stockfish Survival actually playable: a real chess game against a mock
+engine, with login, a live feed, a leaderboard, and the Chess.com lookup, all
+mocked where a later deliverable will supply the real thing.
+
+- **Rules from a library, UI from React**: `chess.js` (in a `useRef`, so the
+  same instance survives re-renders) owns legality, check, mate, and draws.
+  React state only holds what's on screen. Setting `fen` after each move is
+  what triggers the re-render and re-runs the effects.
+- **Effects as the game loop**: one effect asks the engine to move when it's
+  black's turn, one ticks the clock on white's turn, and one ends the game when
+  the clock hits zero. Each effect returns a cleanup, so `clearInterval` (or a
+  `cancelled` flag for the engine's promise) means a reset or navigating away
+  never lets a stale timer or engine reply touch the new game.
+- **Stale closures**: `endGame` takes the move count as an argument rather than
+  reading `movesSurvived`, because when the player's own move ends the game the
+  state setter hasn't applied yet.
+- **Mocks with the real interface**: `getEngineMove()`, `getPlayerStats()`,
+  `login()`/`createAccount()`, and `loadScores()`/`saveScore()` are async or
+  shaped like the eventual service calls, so the later deliverables swap their
+  bodies instead of the components. The Chess.com mock returns the same JSON
+  shape as `/pub/player/{user}/stats`.
+- **Mock engine**: 2-ply minimax with alpha-beta, material plus a
+  centralization bonus, and a random choice among near-best moves. It's about
+  0.2s per move in the browser and beat a random-move player in every test game.
+- **Windows glyph gotcha**: `♟` (U+265F) has an emoji presentation, so it
+  rendered as a purple emoji pawn. Appending U+FE0E (the text variation
+  selector) forces the plain glyph.
+- **Highlight trick**: the squares' colors come from high-specificity
+  `#board tr:nth-child td:nth-child` rules, so the selection/check/last-move
+  tints use `box-shadow: inset 0 0 0 100px rgba(...)` instead of fighting them
+  with `background-color`.
+- **Don't store passwords in localStorage**, even in a mock. The fake account
+  store only remembers which emails registered.
+- Tested end to end with playwright-core driving Edge: login errors, account
+  creation, a full game to checkmate, a clock timeout, the leaderboard, the
+  Chess.com lookup, reload persistence, and logout.
