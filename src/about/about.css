@@ -31,3 +31,17 @@
 .stat-losses {
   font-weight: bold;
 }
+
+.stat-draws {
+  font-weight: bold;
+}
+
+/* dim the previous result while a new lookup is in flight */
+.stat-box.stale {
+  opacity: 0.5;
+}
+
+.stat-error {
+  color: rgb(255, 200, 200);
+  margin-bottom: 0.5em;
+}

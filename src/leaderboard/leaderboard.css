@@ -11,7 +11,14 @@
   text-overflow: ellipsis;
 }
 
-.table tbody tr:first-child td {
+.table tbody tr:first-child:not(.empty-state) td {
   color: var(--accent-gold);
   font-weight: bold;
+}
+
+/* the logged-in player's own games */
+.table tbody tr.own-score td {
+  font-style: italic;
+  text-decoration: underline;
+  text-decoration-color: rgba(0, 0, 0, 0.35);
 }

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import { MessageDialog } from './messageDialog';
 import { createAccount, login } from './authService';
@@ -7,10 +8,12 @@ export function Unauthenticated({ userName, onLogin }) {
   const [email, setEmail] = React.useState(userName);
   const [password, setPassword] = React.useState('');
   const [displayError, setDisplayError] = React.useState(null);
+  const navigate = useNavigate();
 
   async function authenticate(action) {
     try {
       onLogin(await action(email.trim(), password));
+      navigate('/play');
     } catch (err) {
       setDisplayError(err.message);
     }

@@ -1,13 +1,22 @@
 import React from 'react';
+import { loadScores } from './scores';
+import { displayName } from '../login/authService';
 import './leaderboard.css';
 
-export function Leaderboard() {
+export function Leaderboard({ userName }) {
+  const [scores, setScores] = React.useState([]);
+
+  // Load once when the view opens. In the DB deliverable this becomes a fetch
+  // to the backend, which is why it lives in an effect rather than in render.
+  React.useEffect(() => {
+    setScores(loadScores());
+  }, []);
+
   return (
     <main className="container-fluid bg-secondary text-center">
       <h2>Top survivors</h2>
       <p>Best completed attempts, stored in the database.</p>
 
-      {/* Database data placeholder. Will eventually be populated from MongoDB via the backend service. */}
       <table className="table table-warning table-striped-columns">
         <thead className="table-dark">
           <tr>
@@ -18,30 +27,20 @@ export function Leaderboard() {
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>Magnus_Fan_42</td>
-            <td>63</td>
-            <td>August 14, 2026</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>도윤 이</td>
-            <td>51</td>
-            <td>August 2, 2026</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>rookie_rook</td>
-            <td>38</td>
-            <td>July 21, 2026</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>Priya</td>
-            <td>29</td>
-            <td>July 3, 2026</td>
-          </tr>
+          {scores.length === 0 ? (
+            <tr className="empty-state">
+              <td colSpan="4">No games yet. Be the first to survive!</td>
+            </tr>
+          ) : (
+            scores.map((score, i) => (
+              <tr key={i} className={userName && score.name === userName ? 'own-score' : ''}>
+                <td>{i + 1}</td>
+                <td>{displayName(score.name)}</td>
+                <td>{score.moves}</td>
+                <td>{score.date}</td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </main>
