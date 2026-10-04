@@ -21,3 +21,4 @@ service/public
 # MongoDB credentials - never commit
 dbConfig.json
 nov15.txt
+dec.txt
