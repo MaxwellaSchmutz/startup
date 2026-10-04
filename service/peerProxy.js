@@ -1,11 +1,10 @@
 const { WebSocketServer, WebSocket } = require('ws');
 const DB = require('./database.js');
+const { authCookieName, displayName } = require('./auth.js');
 
-const authCookieName = 'token';
 const pingIntervalMs = 10000;
+const gameStartCooldownMs = 5000;
 
-// Pulls the auth token out of the cookie header sent with the WebSocket upgrade
-// request (the same httpOnly cookie the REST endpoints use).
 function tokenFromCookies(header = '') {
   for (const part of header.split(';')) {
     const [name, ...value] = part.trim().split('=');
@@ -14,12 +13,6 @@ function tokenFromCookies(header = '') {
   return null;
 }
 
-// Live game feed over WebSocket at /ws. Unlike a plain relay, the server decides
-// what gets sent and who it's from, so nobody can post activity as someone else:
-//   server -> clients  { type: 'presence', online }               people connected
-//                      { type: 'gameStart', name }                 a player started a game
-//                      { type: 'gameEnd', name, moves, result }   a saved game (sent by index.js)
-//   client -> server   { type: 'gameStart' }   only honored from a logged-in player
 function peerProxy(httpServer) {
   const socketServer = new WebSocketServer({ server: httpServer, path: '/ws', maxPayload: 1024 });
 
@@ -52,25 +45,20 @@ function peerProxy(httpServer) {
         return;
       }
       if (message?.type !== 'gameStart' || !DB.isReady()) return;
-      if (Date.now() - (socket.lastStart || 0) < 5000) return;
+      if (Date.now() - (socket.lastStart || 0) < gameStartCooldownMs) return;
       socket.lastStart = Date.now();
 
-      // Look the player up on every message, so a logged-out token stops working
       try {
-        const token = tokenFromCookies(request.headers.cookie);
-        const user = token && (await DB.getUserByToken(token));
+        const user = await DB.getUserByToken(tokenFromCookies(request.headers.cookie));
         if (user) {
-          broadcast({ type: 'gameStart', name: user.email.split('@')[0] });
+          broadcast({ type: 'gameStart', name: displayName(user.email) });
         }
-      } catch {
-        return;
-      }
+      } catch {}
     });
 
     broadcastPresence();
   });
 
-  // Ping every client; one that didn't answer the last ping is gone, so drop it
   setInterval(() => {
     socketServer.clients.forEach((client) => {
       if (client.isAlive === false) return client.terminate();
