@@ -56,6 +56,10 @@ export async function logout() {
   }
 }
 
+export function forgetUser() {
+  localStorage.removeItem(currentUserKey);
+}
+
 export function currentUser() {
   return localStorage.getItem(currentUserKey) || '';
 }
