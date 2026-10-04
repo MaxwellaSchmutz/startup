@@ -205,10 +205,12 @@ For this deliverable I did the following. Live at <https://startup.beatstockfish
 
 ## 🚀 WebSocket deliverable
 
-For this deliverable I did the following.
+For this deliverable I did the following. Live at <https://startup.beatstockfish.click>, and the Simon WebSocket prerequisite is deployed at <https://simon.beatstockfish.click> (code in [`simon/`](simon)).
 
-- [ ] **Backend listens for WebSocket connection** - I did not complete this part of the deliverable.
-- [ ] **Frontend makes WebSocket connection** - I did not complete this part of the deliverable.
-- [ ] **Data sent over WebSocket connection** - I did not complete this part of the deliverable.
-- [ ] **WebSocket data displayed** - I did not complete this part of the deliverable.
-- [ ] **Application is fully functional** - I did not complete this part of the deliverable.
+- [x] **Backend listens for WebSocket connection** - [`service/peerProxy.js`](service/peerProxy.js) attaches a `ws` `WebSocketServer` to the Express HTTP server at the `/ws` path (in production Caddy passes the `wss://` upgrade through to it). It pings every client every 10 seconds and drops ones that stop answering. Each message can be at most 1 KB, and anything that isn't valid JSON is ignored.
+- [x] **Frontend makes WebSocket connection** - [`src/play/gameNotifier.js`](src/play/gameNotifier.js) opens one shared connection for the whole app: `wss://` on the live site, `ws://` while debugging, where `vite.config.js` proxies `/ws` to the service on port 4000. It reconnects automatically if the connection drops, for example during a deploy. Because the server reads the login cookie when the socket connects, the app reopens the connection whenever a player logs in or out.
+- [x] **Data sent over WebSocket connection** - The server decides who every message is from, so nobody can post activity under someone else's name:
+  - Server to clients: `presence` (how many people are connected, sent whenever someone joins or leaves), `gameStart` (a player made their first move), and `gameEnd` (a game was saved: name, moves survived, result). `gameEnd` comes straight from `POST /api/score` after the game is stored in MongoDB.
+  - Client to server: `gameStart` when a logged-in player makes their first move. The server looks up the player from their auth cookie in MongoDB and attaches their real name; announcements from guests, logged-out tokens, or made-up names are dropped. I tested that a raw client sending `{"type":"gameStart","name":"hacker"}` produces nothing.
+- [x] **WebSocket data displayed** - On the Play page, **Live activity** shows a green "● Live · N other people on the site" status from `presence` (or "○ Reconnecting..."), plus a running list of everyone's games as they start and finish, with your own shown as "You". On the **Leaderboard**, a `gameEnd` from anyone makes the top-ten table and **Your games** refetch, so a new score appears without reloading. I tested this with several browsers at once on the live site.
+- [x] **Application is fully functional** - Nothing is mocked or a placeholder anymore. The fake players that used to generate activity on a timer are gone; every live event is a real player. Accounts, sessions, and scores live in MongoDB, the opponent is real Stockfish 19 (WebAssembly in the browser), the Chess.com lookup calls the real PubAPI, and the live feed is real WebSocket traffic.
