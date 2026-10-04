@@ -187,13 +187,19 @@ For this deliverable I did the following. Live at <https://startup.beatstockfish
 
 ## 🚀 DB/Login deliverable
 
-For this deliverable I did the following.
+For this deliverable I did the following. Live at <https://startup.beatstockfish.click>, and the Simon DB prerequisite is deployed at <https://simon.beatstockfish.click> (code in [`simon/service/database.js`](simon/service/database.js)), both using the database described below.
 
-- [ ] **User registration** - I did not complete this part of the deliverable.
-- [ ] **User login and logout** - I did not complete this part of the deliverable.
-- [ ] **Stores data in MongoDB** - I did not complete this part of the deliverable.
-- [ ] **Stores credentials in MongoDB** - I did not complete this part of the deliverable.
-- [ ] **Restricts functionality based on authentication** - I did not complete this part of the deliverable.
+**Database setup.** Instead of MongoDB Atlas, MongoDB runs on my own EC2 server, next to the services. It's version 7.0.43, because 8.0 and newer refuse to start on the server's Linux 7.0 kernel (MongoDB bug [SERVER-121912](https://jira.mongodb.org/browse/SERVER-121912)).
+- It only listens on `127.0.0.1`, so it isn't reachable from the internet.
+- Password authentication is on. The apps use a `webapp` user that can only read and write the `simon` and `startup` databases.
+- The WiredTiger cache is capped at 0.25 GB, and a 1 GB swap file was added, since the box has about 900 MB of RAM.
+- The credentials live in `service/dbConfig.json`, which is git-ignored, and `deployService.sh` copies it to the server with the service.
+
+- [x] **User registration** - `POST /api/auth/create` hashes the password with bcrypt and inserts the user into the `startup.user` collection. A unique index on `email` makes duplicate accounts impossible, even when two sign-ups for the same address arrive at the same moment; the second one gets a 409 "account already exists".
+- [x] **User login and logout** - `POST /api/auth/login` looks the user up in MongoDB, checks the password with `bcrypt.compare`, and saves a new random session token on the user's document (`$set`), returned in an `httpOnly`, `secure`, `sameSite=strict` cookie. `DELETE /api/auth/logout` removes the token from the document (`$unset`). Because sessions live in the database, a logged-in player stays logged in across server restarts and redeploys.
+- [x] **Stores data in MongoDB** - Every finished game by a logged-in player is inserted into `startup.score` with the moves survived, result, date, and timestamp. `GET /api/scores` builds the public leaderboard with a sorted, limited query (`sort: { moves: -1, createdAt: 1 }, limit: 10`). That query uses an index and returns only the name, never the email. A new endpoint, `GET /api/user/games`, returns the player's personal best, recent games, and total count, which the Leaderboard page shows in a new **Your games** section. Scores survive restarts; I verified this by restarting the service and seeing the same leaderboard.
+- [x] **Stores credentials in MongoDB** - The `user` collection stores the email, the bcrypt hash (`$2b$10$...`), never the password itself, and the current session token. All database access goes through [`service/database.js`](service/database.js).
+- [x] **Restricts functionality based on authentication** - The `verifyAuth` middleware finds the user by the token cookie in MongoDB and rejects the request with 401 otherwise. It guards saving a score (`POST /api/score`), the player's own games (`GET /api/user/games`), and `GET /api/user/me`. Guests can play, but only logged-in players get their games saved, ranked, and listed under **Your games**.
 
 ## 🚀 WebSocket deliverable
 
