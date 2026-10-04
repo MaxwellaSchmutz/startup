@@ -9,6 +9,21 @@ export function formatDate(createdAt) {
   return createdAt ? new Date(createdAt).toLocaleDateString(navigator.languages) : '';
 }
 
+export function formatShortDate(createdAt) {
+  if (!createdAt) return '';
+  const date = new Date(createdAt);
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  const options = sameYear ? { month: 'short', day: 'numeric' } : { month: 'short', year: 'numeric' };
+  return date.toLocaleDateString(navigator.languages, options);
+}
+
+export class ApiError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
+}
+
 export async function loadScores() {
   const response = await fetch('/api/scores');
   if (!response.ok) {
@@ -21,9 +36,22 @@ export async function loadScores() {
 export async function loadMyGames() {
   const response = await fetch('/api/user/games');
   if (!response.ok) {
-    throw new Error(response.status === 401 ? 'Log in to see your games.' : 'Could not load your games.');
+    throw new ApiError(response.status === 401 ? 'Log in to see your games.' : 'Could not load your games.', response.status);
   }
   return response.json();
+}
+
+// Site-wide totals for the home page. Optional: null if the service can't give them
+export async function loadStats() {
+  try {
+    const response = await fetch('/api/stats');
+    if (!response.ok) return null;
+    const stats = await response.json();
+    const ok = ['totalGames', 'totalPlayers', 'bestMoves'].every((key) => Number.isFinite(stats[key]));
+    return ok ? stats : null;
+  } catch {
+    return null;
+  }
 }
 
 // result: 'checkmate' | 'resign' | 'time' | 'draw' | 'win'
@@ -34,10 +62,10 @@ export async function saveScore({ moves, result }) {
     body: JSON.stringify({ moves, result }),
   });
   if (response.status === 401) {
-    throw new Error('Your session expired, so this game was not saved. Log in again to save your next one.');
+    throw new ApiError('Your session expired. Log in again to save this game.', 401);
   }
   if (!response.ok) {
-    throw new Error('The server could not save this game.');
+    throw new ApiError('The server could not save this game.', response.status);
   }
   // 201 Created with just the saved score; the leaderboard fetches its own list
   return response.json();

@@ -1,75 +1,507 @@
-.table {
-  table-layout: fixed;
+.live-dot-small {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: live-pulse 2s ease-out infinite;
 }
 
-/* scoped to .table: in the SPA every component's CSS is bundled together, so a
-   bare td selector would also truncate the chessboard squares on the Play view */
-.table td {
-  max-width: 40vw;
+.leaderboard-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.board-card {
+  padding: var(--space-5) var(--space-4) var(--space-3);
+}
+
+.podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  list-style: none;
+}
+
+.podium-spot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  text-align: center;
+  animation: rise 520ms var(--ease) both;
+}
+
+.podium-spot.place-1 {
+  animation-delay: 80ms;
+}
+
+.podium-spot.place-3 {
+  animation-delay: 160ms;
+}
+
+.podium-name {
+  max-width: 100%;
+  margin-top: var(--space-2);
+  overflow: hidden;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.podium-spot.is-you .podium-name {
+  color: var(--gold);
+}
+
+.podium-moves {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.podium-moves strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.podium-base {
+  width: 100%;
+  margin-top: var(--space-2);
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.01));
+  border: 1px solid var(--line);
+  border-bottom: 0;
+}
+
+.place-1 .podium-base {
+  height: 72px;
+  background: linear-gradient(180deg, rgba(226, 182, 92, 0.22), rgba(226, 182, 92, 0.02));
+  border-color: rgba(226, 182, 92, 0.3);
+}
+
+.place-2 .podium-base {
+  height: 48px;
+}
+
+.place-3 .podium-base {
+  height: 32px;
+}
+
+.place-1 .podium-moves strong {
+  color: var(--gold);
+  font-size: var(--text-lg);
+}
+
+.medal {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1b1408;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18), 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.place-1 .medal {
+  width: 56px;
+  height: 56px;
+  font-size: 1.45rem;
+}
+
+.medal.gold {
+  background: linear-gradient(145deg, #fbe2a1, #d9a441 60%, #b9852c);
+}
+
+.medal.silver {
+  background: linear-gradient(145deg, #f4f6f8, #b9c1cb 60%, #8f98a4);
+}
+
+.medal.bronze {
+  background: linear-gradient(145deg, #f2c49c, #c07f4b 60%, #95592c);
+}
+
+.medal.small {
+  width: 26px;
+  height: 26px;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.leaderboard .table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--text);
+  --bs-table-border-color: var(--line);
+  --bs-table-hover-bg: rgba(255, 255, 255, 0.03);
+  table-layout: fixed;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.leaderboard .table th {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom-color: var(--line-strong);
+}
+
+.leaderboard .table td {
+  padding: var(--space-3);
+  vertical-align: middle;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.table tbody tr:first-child:not(.empty-state) td {
-  color: var(--accent-gold);
-  font-weight: bold;
+.score-table th:nth-child(1) {
+  width: 3.5rem;
 }
 
-/* Phones: with four equal columns the rank number got as much room as the
-   player's name. Pin the narrow columns (fixed layout reads widths from the
-   header row) so the name gets what's left, and tighten the text a little. */
-@media (max-width: 575.98px) {
-  .table {
-    font-size: 0.875rem;
-  }
-
-  .table > :not(caption) > * > * {
-    padding: 0.5rem 0.35rem;
-  }
-
-  .table th:nth-child(1) {
-    width: 2.25rem;
-  }
-
-  .table th:nth-child(3) {
-    width: 4.75rem;
-  }
-
-  .table th:nth-child(4) {
-    width: 5.5rem;
-  }
+.score-table th:nth-child(3) {
+  width: 5.5rem;
+  text-align: right;
 }
 
-/* the logged-in player's own games */
-.table tbody tr.own-score td {
-  font-style: italic;
-  text-decoration: underline;
-  text-decoration-color: rgba(0, 0, 0, 0.35);
+.score-table th:nth-child(4) {
+  width: 7.5rem;
+  text-align: right;
 }
 
-/* "Your games": the logged-in player's own history, below the public table */
+.score-table td.moves,
+.score-table td.date {
+  text-align: right;
+}
+
+.score-table td.moves {
+  font-weight: 700;
+}
+
+.score-table td.date {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.leaderboard .score-table td.rank {
+  overflow: visible;
+  text-overflow: clip;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.score-table tbody tr {
+  transition: background-color var(--dur-fast) ease;
+}
+
+.score-table tbody tr:hover > * {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.score-table tbody tr.top-1 td.moves {
+  color: var(--gold);
+}
+
+.score-table tbody tr.own-score > * {
+  background: var(--gold-soft);
+  box-shadow: none;
+}
+
+.score-table tbody tr.own-score > td:first-child {
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.score-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.you-chip {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 0 7px;
+  border-radius: var(--radius-pill);
+  background: var(--gold);
+  color: var(--on-gold);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+.empty-state td {
+  padding: var(--space-6) var(--space-3) !important;
+  text-align: center;
+  white-space: normal !important;
+}
+
+.empty-message {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--text-muted);
+}
+
+.empty-message.error {
+  color: #ffc9c8;
+}
+
+.skeleton-row td {
+  height: 49px;
+}
+
+.leaderboard-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.cta-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  text-align: center;
+  background:
+    radial-gradient(100% 80% at 50% 0%, rgba(226, 182, 92, 0.14), transparent 70%),
+    var(--ink-850);
+}
+
+.cta-card img {
+  width: 56px;
+  height: 56px;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4));
+}
+
+.cta-card h2 {
+  margin: 0;
+  font-size: var(--text-xl);
+}
+
+.cta-card p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.cta-card .leaderboard-cta {
+  margin-top: var(--space-2);
+}
+
 .my-games {
-  width: 100%;
-  max-width: 600px;
-  margin-top: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
 }
 
-.my-games .table td,
-.my-games .table tbody tr:first-child td {
-  /* override the top-row gold and truncation rules meant for the public table;
-     the second selector matches the gold rule's specificity so it wins by order */
-  color: inherit;
-  font-weight: normal;
-  white-space: normal;
+.my-games h2 {
+  margin: 0;
+  font-size: var(--text-xl);
+}
+
+.my-stats {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: var(--space-2);
+}
+
+.my-stat {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: var(--ink-900);
+  border: 1px solid var(--line);
+}
+
+.my-stat-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.personal-best,
+.my-stat-value {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
 }
 
 .personal-best {
-  color: rgb(246, 239, 158);
-  font-weight: bold;
+  color: var(--gold);
+}
+
+.my-stat-sub {
+  font-size: var(--text-xs);
+  color: var(--text-faint);
 }
 
 .my-games-note {
-  opacity: 0.85;
-  font-style: italic;
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.my-games .table td {
+  padding: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.my-games .table th {
+  padding: var(--space-2);
+}
+
+.my-games-table td.moves {
+  font-weight: 700;
+}
+
+.my-games-table th:nth-child(2) {
+  width: 4.2rem;
+}
+
+.my-games-table th:nth-child(3) {
+  width: 7.2rem;
+}
+
+.leaderboard .my-games-table td:last-child {
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.result-pill {
+  display: inline-block;
+  white-space: nowrap;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-muted);
+}
+
+.result-pill.checkmate {
+  background: var(--red-soft);
+  color: #ffb3b2;
+}
+
+.result-pill.time {
+  background: rgba(130, 202, 219, 0.12);
+  color: var(--teal);
+}
+
+.result-pill.draw {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.result-pill.win {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@media (min-width: 992px) {
+  .leaderboard-layout {
+    grid-template-columns: minmax(0, 1fr) 360px;
+  }
+
+  .leaderboard-side {
+    position: sticky;
+    top: calc(var(--nav-h) + var(--space-4));
+  }
+}
+
+@media (max-width: 575.98px) {
+  .board-card {
+    padding: var(--space-4) var(--space-2) var(--space-2);
+  }
+
+  .podium {
+    gap: var(--space-2);
+  }
+
+  .medal {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
+
+  .place-1 .medal {
+    width: 46px;
+    height: 46px;
+    font-size: 1.2rem;
+  }
+
+  .podium-name {
+    font-size: var(--text-sm);
+  }
+
+  .place-1 .podium-base {
+    height: 44px;
+  }
+
+  .place-2 .podium-base {
+    height: 28px;
+  }
+
+  .place-3 .podium-base {
+    height: 18px;
+  }
+
+  .medal.small {
+    width: 24px;
+    height: 24px;
+  }
+
+  .podium-moves {
+    font-size: var(--text-xs);
+  }
+
+  .leaderboard .table td {
+    padding: var(--space-2);
+    font-size: var(--text-sm);
+  }
+
+  .leaderboard .table th {
+    padding: var(--space-2);
+  }
+
+  .score-table th:nth-child(1) {
+    width: 2.6rem;
+  }
+
+  .score-table th:nth-child(3) {
+    width: 4.2rem;
+  }
+
+  .score-table th:nth-child(4) {
+    width: 4.4rem;
+  }
+
+  .score-table td.date {
+    font-size: var(--text-xs);
+  }
 }
