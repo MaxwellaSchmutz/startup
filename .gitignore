@@ -17,3 +17,7 @@ dist
 
 # local production test copy of the frontend (deployService.sh builds its own)
 service/public
+
+# MongoDB credentials - never commit
+dbConfig.json
+nov15.txt
