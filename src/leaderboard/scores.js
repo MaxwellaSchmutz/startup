@@ -2,9 +2,11 @@
 // public; saving a score requires the auth cookie, and the server fills in the
 // player's name and the timestamp itself.
 
-// Scores carry an ISO createdAt timestamp; show it in the player's own locale
+// Scores carry an ISO createdAt timestamp; show it in the player's own locale.
+// navigator.languages is the browser's language preference, which can differ
+// from the runtime's default locale that a bare toLocaleDateString() uses.
 export function formatDate(createdAt) {
-  return createdAt ? new Date(createdAt).toLocaleDateString() : '';
+  return createdAt ? new Date(createdAt).toLocaleDateString(navigator.languages) : '';
 }
 
 export async function loadScores() {
