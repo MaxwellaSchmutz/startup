@@ -2,7 +2,7 @@
 
 [My Notes](notes.md)
 
-> **Simon Service** - the React frontend now talks to a Node.js/Express backend in `service/` for registration, login, logout, and high scores (kept in memory, so they reset when the service restarts). The About page calls picsum.photos and quote.cs260.click.
+> **Simon DB** - the React frontend talks to a Node.js/Express backend in `service/` for registration, login, logout, and high scores. Users, login sessions, and scores are stored in MongoDB (`service/database.js`), so they survive restarts. The About page calls picsum.photos and quote.cs260.click.
 >
 > To develop, run `npm install` and `node index.js` in `service/` (port 3000), then `npm install` and `npm run dev` here; Vite proxies `/api` to the service. To deploy, run `./deployService.sh -k <pem key file> -h <hostname> -s simon`, which bundles the frontend into `public/` next to the service and restarts it with PM2.
 
