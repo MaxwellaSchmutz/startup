@@ -466,3 +466,58 @@ quote from quote.cs260.click. My earlier Simon fixes were kept.
   removes the double-tap-zoom delay on squares and buttons. Testing tip:
   Playwright's `isMobile` widens `innerWidth` to fit overflowing content, so
   check `scrollWidth` against the configured viewport width, not `innerWidth`.
+
+## Self-hosted MongoDB (instead of Atlas)
+
+- Installed MongoDB on the EC2 box rather than making an Atlas account. **8.0
+  wouldn't start**: "Linux kernel versions 6.19 and newer has a known
+  incompatibility" (SERVER-121912, a TCMalloc rseq bug; the box runs kernel 7.0).
+  MongoDB 7.0 isn't packaged for Ubuntu 24.04, but the 22.04 (jammy) `.deb`
+  installs fine (`apt-get install -s` showed every dependency resolving), so I
+  installed 7.0.43 and ran `apt-mark hold mongodb-org-server` so an upgrade can't
+  pull 8.0 back in.
+- Locked down: `bindIp: 127.0.0.1`, `security.authorization: enabled`, an `admin`
+  root user plus a `webapp` user with `readWrite` on only `simon` and `startup`.
+  Passwords were generated on the server with `openssl rand` and only exist in
+  mode-600 files (`~/dbConfig.json`, `~/.mongo-admin.json`).
+- Small box: `wiredTiger.engineConfig.cacheSizeGB: 0.25` (the default takes
+  about half of RAM) and a 1 GB `/swapfile` in `/etc/fstab` as an OOM safety net.
+- `dbConfig.json` is git-ignored, and `deployService.sh` copies `service/*.json`,
+  so it rides along to the server on every deploy without ever reaching GitHub.
+- **Connection string**: Atlas uses `mongodb+srv://user:pw@cluster.xxx.mongodb.net`.
+  A plain host with a port uses `mongodb://user:pw@127.0.0.1:27017/?authSource=admin`
+  (the users were created in the `admin` db). `database.js` picks based on whether
+  the hostname has a port, and `MONGO_URL` overrides it for local debugging.
+- **Local testing** without the server: `mongodb-memory-server` starts a
+  throwaway `mongod` (`MongoMemoryServer.create()`), then run the service with
+  `MONGO_URL=mongodb://127.0.0.1:<port>/ node index.js`.
+- mongosh over ssh: `node` and `pm2` come from nvm, so source `~/.nvm/nvm.sh`
+  first. Long one-line `--eval` scripts through ssh are a quoting nightmare, so
+  `scp` a `.js` file and run `mongosh <url> file.js` instead.
+
+## Simon DB
+
+- `database.js` wraps the collections (`getUser`, `getUserByToken`, `addUser`,
+  `updateUser`, `updateUserRemoveAuth`, `addScore`, `getHighScores`), and
+  `index.js` just awaits them instead of touching arrays. `getHighScores` is a
+  query with `sort` + `limit`, so the database does the ranking.
+- Sessions are stored on the user document, so a restart no longer logs
+  everyone out. `getHighScores` deliberately skips a score of 0 (`$gt: 0`).
+
+## Startup DB
+
+- `user` collection: `{ email, password: <bcrypt hash>, token }`. `score`
+  collection: `{ email, name, moves, result, date, createdAt }`.
+- **Indexes** are created on startup: `email` unique (a duplicate insert throws
+  error code 11000, which becomes a 409; three simultaneous sign-ups for one
+  email gave 200/409/409), `token` for the per-request auth lookup, and
+  `{ moves: -1, createdAt: 1 }` and `{ email: 1, createdAt: -1 }` for the
+  leaderboard and "your games" queries.
+- **Projection** keeps emails out of public responses:
+  `{ _id: 0, name: 1, moves: 1, result: 1, date: 1 }`.
+- New `GET /api/user/games` (auth required) returns the best, the ten most
+  recent, and a count, shown in "Your games" on the leaderboard.
+- **CSS specificity gotcha**: the public table's gold first-row rule
+  (`.table tbody tr:first-child:not(.empty-state) td`) is (0,3,3), so
+  `.my-games .table td` lost. Matching it with
+  `.my-games .table tbody tr:first-child td` and placing it later fixed it.
