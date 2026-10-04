@@ -12,7 +12,8 @@ const precache = [
   ...pieces,
   ...buildFiles,
 ];
-const cacheFirst = ['/assets/', '/stockfish/', '/icons/', '/pieces/'];
+const cacheFirstFolders = ['/assets/', '/stockfish/', '/icons/', '/pieces/'];
+const cacheFirstFiles = ['/favicon.svg', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -66,7 +67,10 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(fromNetworkFirst(request));
-  } else if (cacheFirst.some((prefix) => url.pathname.startsWith(prefix))) {
+  } else if (
+    cacheFirstFolders.some((folder) => url.pathname.startsWith(folder)) ||
+    cacheFirstFiles.includes(url.pathname)
+  ) {
     event.respondWith(fromCacheFirst(request));
   }
 });
