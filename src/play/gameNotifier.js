@@ -51,8 +51,16 @@ class LiveFeed {
   // The server reads the login cookie once, when the socket connects, so after
   // logging in or out the app reopens the connection to pick up the new cookie
   reconnect() {
-    this.socket.onclose = null;
-    this.socket.close();
+    const old = this.socket;
+    old.onclose = null;
+    old.onmessage = null;
+    if (old.readyState === WebSocket.CONNECTING) {
+      // closing mid-handshake logs a browser error, so close it once it opens
+      old.onopen = () => old.close();
+    } else {
+      old.onopen = null;
+      old.close();
+    }
     this.connected = false;
     this.connect();
   }
