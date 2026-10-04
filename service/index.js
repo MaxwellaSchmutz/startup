@@ -3,6 +3,7 @@ const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const uuid = require('uuid');
 const DB = require('./database.js');
+const { peerProxy } = require('./peerProxy.js');
 
 const app = express();
 
@@ -13,6 +14,10 @@ const authCookieName = 'token';
 const gameResults = ['checkmate', 'resign', 'time', 'draw', 'win'];
 // Enforced when registering. Login doesn't check it, so older accounts still work.
 const minPasswordLength = 8;
+
+// Caddy terminates HTTPS on this box and forwards to us on localhost with
+// X-Forwarded-Proto, so trust it for req.secure (used by setAuthCookie)
+app.set('trust proxy', 'loopback');
 
 app.use(express.json());
 app.use(cookieParser());
@@ -43,7 +48,7 @@ apiRouter.post('/auth/create', async (req, res) => {
   } else {
     try {
       const user = await createUser(email, password);
-      setAuthCookie(res, user.token);
+      setAuthCookie(req, res, user.token);
       res.send({ email: user.email });
     } catch (err) {
       // The unique email index rejects a second account for the same address
@@ -60,7 +65,7 @@ apiRouter.post('/auth/login', async (req, res) => {
   if (user && password && (await bcrypt.compare(password, user.password))) {
     user.token = uuid.v4();
     await DB.setToken(user.email, user.token);
-    setAuthCookie(res, user.token);
+    setAuthCookie(req, res, user.token);
     res.send({ email: user.email });
     return;
   }
@@ -118,6 +123,8 @@ apiRouter.post('/score', verifyAuth, async (req, res) => {
   // Responds with just the new score; the frontend fetches the leaderboard when it needs it.
   const email = req.user.email;
   const score = await DB.addScore({ email, name: email.split('@')[0], moves, result, createdAt: new Date() });
+  // Tell everyone connected over WebSocket; their live feed and leaderboard update
+  liveFeed?.broadcast({ type: 'gameEnd', name: score.name, moves, result });
   res.status(201).send(score);
 });
 
@@ -155,14 +162,20 @@ async function findUser(field, value) {
   return field === 'token' ? DB.getUserByToken(value) : DB.getUser(value);
 }
 
-function setAuthCookie(res, authToken) {
+// secure (HTTPS-only) whenever the request came over HTTPS, which is always the
+// case in production. On plain-http localhost while debugging the cookie can't be
+// secure, or the browser won't send it on the ws:// live feed connection.
+function setAuthCookie(req, res, authToken) {
   res.cookie(authCookieName, authToken, {
-    secure: true,
+    secure: req.secure,
     httpOnly: true,
     sameSite: 'strict',
   });
 }
 
-app.listen(port, () => {
+const httpService = app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
+
+// WebSocket live feed (/ws) on the same HTTP server
+const liveFeed = peerProxy(httpService);
