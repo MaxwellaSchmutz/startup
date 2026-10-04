@@ -6,6 +6,7 @@ AGENTS.md
 *.pem
 assignment8th.txt
 oct22.txt
+nov5.txt
 
 # NPM packages and Vite build output
 node_modules

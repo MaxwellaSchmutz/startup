@@ -378,3 +378,32 @@ mocked where a later deliverable will supply the real thing.
   `/stockfish/**` in Playwright.
 - **GPL**: Stockfish is GPLv3, so the license ships alongside it and the About
   page credits it with source links.
+
+## PM2 on the production server
+
+The course's prebuilt server image comes with Node + PM2, but I built my own
+Ubuntu 24.04 EC2 box, so until now Caddy served each site's files straight from
+disk and `pm2 ls` returned `command not found`. Set it up the course way:
+
+- Installed nvm (v0.40.3) → Node 24 LTS → `npm install -g pm2` (PM2 7.0.4), all
+  as the `ubuntu` user. nvm only loads in interactive shells, so
+  `ssh host 'pm2 ls'` fails. Use `ssh host 'bash -ic "pm2 ls"'` or source
+  `~/.nvm/nvm.sh` first.
+- Each site is now a Node process: `deploy/staticServer.cjs` (built-in modules
+  only, listens on 127.0.0.1) copied to `~/services/<service>/` and started with
+  `pm2 start staticServer.cjs --name simon -- 3000` / `--name startup -- 4000`.
+  It serves `public/` with the SPA fallback to `index.html`, a proper
+  `application/wasm` type for Stockfish, and long-lived caching for Vite's hashed
+  `/assets`. `deployReact.sh` only replaces `public/`, so redeploys don't touch
+  it, and the Service deliverable will swap it for an Express `index.js`.
+- Caddy's `simon` and `startup` blocks became `reverse_proxy localhost:3000` /
+  `localhost:4000` (backup at `/etc/caddy/Caddyfile.bak-pm2`). Caddy still does
+  HTTPS, and the bare domain still serves `/usr/share/caddy`.
+- `pm2 startup systemd` + `pm2 save` make the processes come back after a reboot.
+  Verified by `pm2 kill` → `systemctl start pm2-ubuntu`, which brought both
+  apps back from the saved dump.
+
+`pm2 ls` columns: **id/name** of each app; **mode** `fork` (one process, vs
+`cluster`); **pid**; **uptime**; **↺** restart count (PM2 restarts crashed apps
+automatically); **status** `online`; **cpu/mem** usage; **user** it runs as;
+**watching** whether it auto-restarts on file changes.

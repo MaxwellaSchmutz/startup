@@ -35,6 +35,7 @@ export function Unauthenticated({ userName, onLogin }) {
             type="email"
             id="email"
             name="email"
+            autoComplete="username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
@@ -47,6 +48,7 @@ export function Unauthenticated({ userName, onLogin }) {
             type="password"
             id="password"
             name="password"
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="password"
