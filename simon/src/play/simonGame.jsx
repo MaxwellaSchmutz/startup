@@ -59,7 +59,8 @@ export function SimonGame(props) {
       const playSequence = async () => {
         await delay(500);
         for (const btn of sequence) {
-          await btn.ref.current.press();
+          // The ref is null once the player leaves the Play page mid-sequence
+          await btn.ref.current?.press();
         }
         setAllowPlayer(true);
       };
@@ -70,7 +71,7 @@ export function SimonGame(props) {
   async function buttonDance(laps = 5) {
     for (let step = 0; step < laps; step++) {
       for (const btn of buttons.values()) {
-        await btn.ref.current.press(100, false);
+        await btn.ref.current?.press(100, false);
       }
     }
   }
@@ -84,37 +85,14 @@ export function SimonGame(props) {
     const date = new Date().toLocaleDateString();
     const newScore = { name: userName, score: score, date: date };
 
+    await fetch('/api/score', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(newScore),
+    });
+
     // Let other players know the game has concluded
     GameNotifier.broadcastEvent(userName, GameEvent.End, newScore);
-
-    updateScoresLocal(newScore);
-  }
-
-  function updateScoresLocal(newScore) {
-    let scores = [];
-    const scoresText = localStorage.getItem('scores');
-    if (scoresText) {
-      scores = JSON.parse(scoresText);
-    }
-
-    let found = false;
-    for (const [i, prevScore] of scores.entries()) {
-      if (newScore.score > prevScore.score) {
-        scores.splice(i, 0, newScore);
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) {
-      scores.push(newScore);
-    }
-
-    if (scores.length > 10) {
-      scores.length = 10;
-    }
-
-    localStorage.setItem('scores', JSON.stringify(scores));
   }
 
   // We use React refs so the game can drive button press events

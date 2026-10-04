@@ -2,7 +2,9 @@
 
 [My Notes](notes.md)
 
-> **Simon React Phase 1: Routing** - this repository ports Simon CSS to a Vite + React single-page application with React Router. Run `npm install` then `npm run dev` to develop, and `./deployReact.sh -k <pem key file> -h <hostname> -s simon` to deploy.
+> **Simon Service** - the React frontend now talks to a Node.js/Express backend in `service/` for registration, login, logout, and high scores (kept in memory, so they reset when the service restarts). The About page calls picsum.photos and quote.cs260.click.
+>
+> To develop, run `npm install` and `node index.js` in `service/` (port 3000), then `npm install` and `npm run dev` here; Vite proxies `/api` to the service. To deploy, run `./deployService.sh -k <pem key file> -h <hostname> -s simon`, which bundles the frontend into `public/` next to the service and restarts it with PM2.
 
 In 1978 Milton-Bradley, now Hasbro, released an electronic game named Simon. It was cutting edge at the time since there were so few electronic games, and all the cool kids had one.
 
