@@ -15,30 +15,49 @@ function connectionUrl() {
   return `mongodb+srv://${user}:${password}@${config.hostname}`;
 }
 
-const client = new MongoClient(connectionUrl());
-const db = client.db('startup');
-const userCollection = db.collection('user');
-const scoreCollection = db.collection('score');
+// Reassigned on each connection attempt: after a failed connect the driver
+// closes the client ("Topology is closed"), so a retry needs a fresh one.
+let client;
+let userCollection;
+let scoreCollection;
 
-// Leaderboard rows are public, so they never include the player's email
-const publicScoreFields = { _id: 0, name: 1, moves: 1, result: 1, date: 1 };
+// Leaderboard rows are public, so they never include the player's email. Only
+// the timestamp is stored; each browser formats it in the player's own locale.
+const publicScoreFields = { _id: 0, name: 1, moves: 1, result: 1, createdAt: 1 };
 
-// Fail fast on startup if the database is unreachable or the credentials are
-// wrong, and make sure the indexes exist. The unique email index is what stops
-// two simultaneous registrations for the same address.
+const retryDelayMs = 5000;
+let ready = false;
+
+// Connect and make sure the indexes exist (the unique email index is what stops
+// two simultaneous registrations for the same address). If MongoDB isn't up yet,
+// e.g. the server just rebooted and mongod is still starting, keep retrying
+// instead of crashing; until then the API answers 503 (see isReady).
 (async function initialize() {
-  try {
-    await db.command({ ping: 1 });
-    await userCollection.createIndex({ email: 1 }, { unique: true });
-    await userCollection.createIndex({ token: 1 });
-    await scoreCollection.createIndex({ moves: -1, createdAt: 1 });
-    await scoreCollection.createIndex({ email: 1, createdAt: -1 });
-    console.log(`Connected to database at ${process.env.MONGO_URL ? 'MONGO_URL' : config.hostname}`);
-  } catch (ex) {
-    console.log(`Unable to connect to database because ${ex.message}`);
-    process.exit(1);
+  for (let attempt = 1; !ready; attempt++) {
+    try {
+      client = new MongoClient(connectionUrl());
+      const db = client.db('startup');
+      userCollection = db.collection('user');
+      scoreCollection = db.collection('score');
+
+      await db.command({ ping: 1 });
+      await userCollection.createIndex({ email: 1 }, { unique: true });
+      await userCollection.createIndex({ token: 1 });
+      await scoreCollection.createIndex({ moves: -1, createdAt: 1 });
+      await scoreCollection.createIndex({ email: 1, createdAt: -1 });
+      ready = true;
+      console.log(`Connected to database at ${process.env.MONGO_URL ? 'MONGO_URL' : config.hostname}`);
+    } catch (ex) {
+      console.log(`Database not available (attempt ${attempt}): ${ex.message}. Retrying in ${retryDelayMs / 1000}s`);
+      await client.close().catch(() => {});
+      await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+    }
   }
 })();
+
+function isReady() {
+  return ready;
+}
 
 function getUser(email) {
   return userCollection.findOne({ email });
@@ -63,6 +82,7 @@ async function removeToken(email) {
 
 async function addScore(score) {
   await scoreCollection.insertOne({ ...score });
+  return { name: score.name, moves: score.moves, result: score.result, createdAt: score.createdAt };
 }
 
 // Top ten by moves survived; on a tie the earlier game ranks higher
@@ -86,6 +106,7 @@ async function getPlayerGames(email) {
 }
 
 module.exports = {
+  isReady,
   getUser,
   getUserByToken,
   addUser,
