@@ -1,5 +1,5 @@
 import React from 'react';
-import { loadMyGames } from './scores';
+import { formatDate, loadMyGames } from './scores';
 
 const resultLabels = {
   checkmate: 'Checkmated',
@@ -30,7 +30,7 @@ export function MyGames() {
     <section className="my-games">
       <h2>Your games</h2>
       <p>
-        Personal best: <span className="personal-best">{games.best.moves} moves</span> ({games.best.date}) &middot;{' '}
+        Personal best: <span className="personal-best">{games.best.moves} moves</span> ({formatDate(games.best.createdAt)}) &middot;{' '}
         {games.total} game{games.total === 1 ? '' : 's'} played
       </p>
       <table className="table table-sm table-dark table-striped">
@@ -44,7 +44,7 @@ export function MyGames() {
         <tbody>
           {games.recent.map((game, i) => (
             <tr key={i}>
-              <td>{game.date}</td>
+              <td>{formatDate(game.createdAt)}</td>
               <td>{game.moves}</td>
               <td>{resultLabels[game.result] ?? game.result}</td>
             </tr>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { loadScores } from './scores';
+import { formatDate, loadScores } from './scores';
 import { MyGames } from './myGames';
 import { displayName } from '../login/authService';
 import './leaderboard.css';
@@ -46,7 +46,7 @@ export function Leaderboard({ userName }) {
                 <td>{i + 1}</td>
                 <td>{score.name}</td>
                 <td>{score.moves}</td>
-                <td>{score.date}</td>
+                <td>{formatDate(score.createdAt)}</td>
               </tr>
             ))
           )}

@@ -1,6 +1,11 @@
 // Score calls to the backend service (service/index.js). The leaderboard is
 // public; saving a score requires the auth cookie, and the server fills in the
-// player's name and the date itself.
+// player's name and the timestamp itself.
+
+// Scores carry an ISO createdAt timestamp; show it in the player's own locale
+export function formatDate(createdAt) {
+  return createdAt ? new Date(createdAt).toLocaleDateString() : '';
+}
 
 export async function loadScores() {
   const response = await fetch('/api/scores');
@@ -32,5 +37,6 @@ export async function saveScore({ moves, result }) {
   if (!response.ok) {
     throw new Error('The server could not save this game.');
   }
+  // 201 Created with just the saved score; the leaderboard fetches its own list
   return response.json();
 }
