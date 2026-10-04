@@ -11,6 +11,7 @@ import { Leaderboard } from './leaderboard/leaderboard';
 import { About } from './about/about';
 import { NotFound } from './notfound/notfound';
 import { AuthState } from './login/authState';
+import { GameNotifier } from './play/gameNotifier';
 import { currentUser, displayName, verifySession } from './login/authService';
 
 export default function App() {
@@ -82,6 +83,8 @@ export default function App() {
                 onAuthChange={(newUserName, newAuthState) => {
                   setUserName(newUserName);
                   setAuthState(newAuthState);
+                  // let the live feed connection pick up the new login cookie
+                  GameNotifier.reconnect();
                 }}
               />
             }

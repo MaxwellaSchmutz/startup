@@ -3,7 +3,7 @@ import Button from 'react-bootstrap/Button';
 import { Chess } from 'chess.js';
 import { ChessBoard } from './chessBoard';
 import { getEngineMove, preloadEngine } from './engine';
-import { GameEvent, GameNotifier } from './gameNotifier';
+import { GameNotifier } from './gameNotifier';
 import { saveScore } from '../leaderboard/scores';
 import { Link } from 'react-router-dom';
 import { displayName } from '../login/authService';
@@ -63,9 +63,8 @@ export function ChessGame({ userName }) {
     setResult(reason);
     setSelected(null);
     if (isGuest) return;
-    // Save to the service; the live feed still hears about it either way.
+    // Save to the service, which also announces the game over WebSocket
     saveScore({ moves, result: reason }).catch((err) => setSaveError(err.message));
-    GameNotifier.broadcastEvent(playerName, GameEvent.End, { moves, result: reason });
   }
 
   function gameOverReason() {
@@ -83,7 +82,7 @@ export function ChessGame({ userName }) {
 
     if (status === 'ready') {
       setStatus('playing');
-      if (!isGuest) GameNotifier.broadcastEvent(playerName, GameEvent.Start);
+      if (!isGuest) GameNotifier.announceGameStart();
     }
     if (game.isGameOver()) {
       endGame(gameOverReason(), moves);
