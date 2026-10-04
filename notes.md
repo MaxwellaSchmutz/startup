@@ -521,3 +521,55 @@ quote from quote.cs260.click. My earlier Simon fixes were kept.
   (`.table tbody tr:first-child:not(.empty-state) td`) is (0,3,3), so
   `.my-games .table td` lost. Matching it with
   `.my-games .table tbody tr:first-child td` and placing it later fixed it.
+
+## Simon WebSocket
+
+- `service/peerProxy.js` attaches `new WebSocketServer({ server: httpServer })`
+  to the HTTP server that `app.listen` returns, so HTTP and WebSocket share port
+  3000. It relays each message to every *other* client and uses ping/pong
+  (`isAlive` flag, ping every 10s, `terminate()` anyone who didn't pong) to drop
+  dead connections.
+- Caddy's `reverse_proxy` passes WebSocket upgrades through with no extra
+  config. The page uses `wss://` when served over https.
+- Vite needs `'/ws': { target: 'ws://localhost:3000', ws: true }` in its proxy
+  to debug locally.
+- **Bugs in the course version** (avoided in mine):
+  - Logout did `delete user.token; DB.updateUser(user)`, but `updateUser` uses
+    `$set`, which can't remove a field, so the token stayed valid after logout.
+    Use `$unset`.
+  - `receiveEvent` re-sent the *whole* event history to every handler on each
+    new message, so the feed filled with duplicates.
+  - `removeHandler` dropped the `filter` result again.
+  - No reconnect, and `send()` while the socket is still connecting throws. I
+    added a reconnect and a `readyState === OPEN` check.
+- The "connected" system event fires at page load, before the Play view
+  subscribes, so it never shows up there. That's harmless.
+
+## Startup WebSocket
+
+- **The server is the source of truth**: instead of blindly relaying whatever
+  a client sends (like Simon), the server builds every message. `gameEnd`
+  comes from `POST /api/score` after the game is saved. A client's `gameStart`
+  is only honored if the socket's auth cookie maps to a user in MongoDB, and
+  the server attaches the name. A raw client sending a fake name gets nothing.
+- **Cookies on WebSocket**: the browser sends cookies with the upgrade request,
+  and the server parses `request.headers.cookie` then. That's *once per
+  connection*, so a socket opened before login stays anonymous. Fix: reconnect
+  the socket in `onAuthChange`.
+- **Secure cookies vs `ws://localhost`**: Chrome sends `Secure` cookies to
+  `http://localhost` but not on the `ws://localhost` upgrade, so the live feed
+  couldn't see the login while debugging. Fix: `secure: req.secure` with
+  `app.set('trust proxy', 'loopback')`, so the cookie is `Secure` behind
+  Caddy (which sets `X-Forwarded-Proto: https`) and plain on local http.
+  Verified the live `Set-Cookie` still says `HttpOnly; Secure; SameSite=Strict`.
+- **Race on mount**: the socket can open between a component's first render and
+  its `useEffect` subscribing, which loses the "connected" event. Re-read
+  `GameNotifier.connected` and `online` right after `addHandler`.
+- Closing a socket that's still `CONNECTING` logs a browser error ("closed
+  before the connection is established"), so `reconnect()` closes it in its
+  `onopen` instead.
+- **Live leaderboard**: a `version` counter in state, bumped on every `gameEnd`
+  message, is a `useEffect` dependency for the fetch, so the table and "Your
+  games" reload whenever anyone saves a game.
+- Testing: Playwright with several browser contexts (each its own cookie jar)
+  plus a raw `ws` client, all against the live `wss://` endpoint.
