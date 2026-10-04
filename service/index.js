@@ -11,6 +11,8 @@ const port = process.argv.length > 2 ? process.argv[2] : 4000;
 
 const authCookieName = 'token';
 const gameResults = ['checkmate', 'resign', 'time', 'draw', 'win'];
+// Enforced when registering. Login doesn't check it, so older accounts still work.
+const minPasswordLength = 8;
 
 app.use(express.json());
 app.use(cookieParser());
@@ -21,11 +23,23 @@ app.use(express.static('public'));
 const apiRouter = express.Router();
 app.use('/api', apiRouter);
 
+// Until the database connection is up (it retries on startup), answer API calls
+// with 503 instead of failing them one by one.
+apiRouter.use((_req, res, next) => {
+  if (DB.isReady()) {
+    next();
+  } else {
+    res.status(503).send({ msg: 'The game server is still starting up. Try again in a few seconds.' });
+  }
+});
+
 // CreateAuth: register a new user and log them in
 apiRouter.post('/auth/create', async (req, res) => {
   const { email, password } = credentials(req.body);
   if (!email || !password) {
     res.status(400).send({ msg: 'Enter a valid email address and a password.' });
+  } else if (password.length < minPasswordLength) {
+    res.status(400).send({ msg: `Choose a password with at least ${minPasswordLength} characters.` });
   } else {
     try {
       const user = await createUser(email, password);
@@ -90,7 +104,7 @@ apiRouter.get('/user/games', verifyAuth, async (req, res) => {
 });
 
 // SubmitScore: record a finished game for the logged-in player. The name and
-// date come from the server, not the request, so nobody can post as someone else.
+// timestamp come from the server, not the request, so nobody can post as someone else.
 // The leaderboard only ever returns the part of the email before the @.
 apiRouter.post('/score', verifyAuth, async (req, res) => {
   const moves = Number(req.body?.moves);
@@ -100,11 +114,11 @@ apiRouter.post('/score', verifyAuth, async (req, res) => {
     return;
   }
 
-  const createdAt = new Date();
-  const date = createdAt.toLocaleDateString('en-US', { timeZone: 'America/Denver' });
+  // Only the timestamp is stored; the browser formats it for the player's locale.
+  // Responds with just the new score; the frontend fetches the leaderboard when it needs it.
   const email = req.user.email;
-  await DB.addScore({ email, name: email.split('@')[0], moves, result, date, createdAt });
-  res.send(await DB.getHighScores());
+  const score = await DB.addScore({ email, name: email.split('@')[0], moves, result, createdAt: new Date() });
+  res.status(201).send(score);
 });
 
 // Default error handler, including malformed JSON bodies

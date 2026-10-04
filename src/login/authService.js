@@ -32,7 +32,13 @@ async function authRequest(endpoint, email, password) {
   return body.email;
 }
 
+// Matches the service's registration rule, so the player hears about it right away
+export const minPasswordLength = 8;
+
 export function createAccount(email, password) {
+  if (password && password.length < minPasswordLength) {
+    return Promise.reject(new Error('Choose a password with at least ' + minPasswordLength + ' characters.'));
+  }
   return authRequest('/api/auth/create', email, password);
 }
 
