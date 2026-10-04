@@ -52,6 +52,7 @@ export function ChessGame({ userName }) {
   const [selected, setSelected] = React.useState(null);
   const [lastMove, setLastMove] = React.useState(null);
   const [result, setResult] = React.useState('');
+  const [saveError, setSaveError] = React.useState('');
 
   const playerTurn = game.turn() === 'w';
   const engineThinking = status === 'playing' && !playerTurn;
@@ -62,9 +63,9 @@ export function ChessGame({ userName }) {
     setResult(reason);
     setSelected(null);
     if (isGuest) return;
-    const score = { name: userName, moves, result: reason, date: new Date().toLocaleDateString() };
-    saveScore(score);
-    GameNotifier.broadcastEvent(playerName, GameEvent.End, score);
+    // Save to the service; the live feed still hears about it either way.
+    saveScore({ moves, result: reason }).catch((err) => setSaveError(err.message));
+    GameNotifier.broadcastEvent(playerName, GameEvent.End, { moves, result: reason });
   }
 
   function gameOverReason() {
@@ -110,6 +111,7 @@ export function ChessGame({ userName }) {
     setSelected(null);
     setLastMove(null);
     setResult('');
+    setSaveError('');
   }
 
   // Start loading Stockfish as soon as the board appears, so it's ready by
@@ -195,6 +197,7 @@ export function ChessGame({ userName }) {
       <div className={`game-message ${status === 'over' ? 'game-over' : ''}`} role="status">
         {statusText}
         {status === 'over' && ` You survived ${movesSurvived} move${movesSurvived === 1 ? '' : 's'}.`}
+        {saveError && <div className="save-error">{saveError}</div>}
         {isGuest && (
           <div className="guest-note">
             Playing as a guest. <Link to="/">Log in or create an account</Link> to put your games on the leaderboard.

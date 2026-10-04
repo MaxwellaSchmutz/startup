@@ -1,54 +1,77 @@
-// Mocked account service. This will be replaced with calls to the backend's
-// /api/auth endpoints in the Service and Login deliverables. Until then the
-// browser's localStorage stands in for the user database. Only the email is
-// remembered, never the password, since localStorage isn't a safe place for it.
+// Account calls to the backend service (service/index.js). The service keeps
+// the real session in an httpOnly cookie; localStorage only remembers which
+// email is logged in so the UI can render immediately on reload, and
+// verifySession() checks that against the server.
 
-const usersKey = 'users';
 const currentUserKey = 'userName';
 
-function registeredUsers() {
-  try {
-    return JSON.parse(localStorage.getItem(usersKey)) || [];
-  } catch {
-    return [];
-  }
-}
-
-function validate(email, password) {
+async function authRequest(endpoint, email, password) {
   if (!email.includes('@')) {
     throw new Error('Enter a valid email address.');
   }
   if (!password) {
     throw new Error('Enter a password.');
   }
-}
 
-export async function createAccount(email, password) {
-  validate(email, password);
-  const users = registeredUsers();
-  if (users.includes(email)) {
-    throw new Error(`An account for ${email} already exists. Try logging in instead.`);
+  let response;
+  try {
+    response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+  } catch {
+    throw new Error('Could not reach the server. Check your connection and try again.');
   }
-  localStorage.setItem(usersKey, JSON.stringify([...users, email]));
-  localStorage.setItem(currentUserKey, email);
-  return email;
-}
 
-export async function login(email, password) {
-  validate(email, password);
-  if (!registeredUsers().includes(email)) {
-    throw new Error(`No account found for ${email}. Create an account first.`);
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(body.msg || `Request failed (${response.status}).`);
   }
-  localStorage.setItem(currentUserKey, email);
-  return email;
+  localStorage.setItem(currentUserKey, body.email);
+  return body.email;
 }
 
-export function logout() {
-  localStorage.removeItem(currentUserKey);
+export function createAccount(email, password) {
+  return authRequest('/api/auth/create', email, password);
+}
+
+export function login(email, password) {
+  return authRequest('/api/auth/login', email, password);
+}
+
+export async function logout() {
+  try {
+    await fetch('/api/auth/logout', { method: 'DELETE' });
+  } catch {
+    // Offline: the cookie can't be cleared server-side, but forget it locally anyway
+  } finally {
+    localStorage.removeItem(currentUserKey);
+  }
 }
 
 export function currentUser() {
   return localStorage.getItem(currentUserKey) || '';
+}
+
+// Asks the server who the auth cookie belongs to. Returns '' if the session
+// is gone (logged out elsewhere, or the service restarted and forgot it).
+export async function verifySession() {
+  try {
+    const response = await fetch('/api/user/me');
+    if (response.ok) {
+      const { email } = await response.json();
+      localStorage.setItem(currentUserKey, email);
+      return email;
+    }
+    if (response.status === 401) {
+      localStorage.removeItem(currentUserKey);
+      return '';
+    }
+  } catch {
+    // Server unreachable: keep whatever we had rather than logging the player out
+  }
+  return currentUser();
 }
 
 // "magnus@example.com" -> "magnus", used everywhere a player name is shown

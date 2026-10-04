@@ -9,7 +9,7 @@ import { Leaderboard } from './leaderboard/leaderboard';
 import { About } from './about/about';
 import { NotFound } from './notfound/notfound';
 import { AuthState } from './login/authState';
-import { currentUser, displayName } from './login/authService';
+import { currentUser, displayName, verifySession } from './login/authService';
 
 export default function App() {
   // Lifted state: Login changes who is logged in, and App needs to know so it
@@ -18,6 +18,18 @@ export default function App() {
   const [userName, setUserName] = React.useState(currentUser());
   const [authState, setAuthState] = React.useState(userName ? AuthState.Authenticated : AuthState.Unauthenticated);
   const authenticated = authState === AuthState.Authenticated;
+
+  // The remembered login can be stale (logged out elsewhere, or the service
+  // restarted and forgot its sessions), so confirm it with the server once.
+  React.useEffect(() => {
+    if (!userName) return;
+    verifySession().then((email) => {
+      if (!email) {
+        setUserName('');
+        setAuthState(AuthState.Unauthenticated);
+      }
+    });
+  }, []);
 
   return (
     <BrowserRouter>

@@ -159,3 +159,9 @@
     flex-direction: column;
   }
 }
+
+.save-error {
+  margin-top: 0.4em;
+  color: rgb(255, 200, 200);
+  font-weight: normal;
+}

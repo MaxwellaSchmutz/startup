@@ -17,8 +17,8 @@ export function Authenticated({ userName, onLogout }) {
       </Button>{' '}
       <Button
         variant="outline-light"
-        onClick={() => {
-          logout();
+        onClick={async () => {
+          await logout();
           onLogout();
         }}
       >

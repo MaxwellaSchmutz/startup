@@ -28,8 +28,6 @@ export function About() {
     lookUp(defaultPlayer);
   }, []);
 
-  const blitz = stats?.chess_blitz;
-
   return (
     <main className="bg-secondary">
       <div id="picture" className="picture-box">
@@ -67,7 +65,7 @@ export function About() {
       <div>
         {/* Third party service: Chess.com PubAPI lookup (mocked in chesscomService.js) */}
         <h2>Look up a Chess.com player</h2>
-        <p>Enter a Chess.com username to see their public blitz stats, pulled from the Chess.com PubAPI.</p>
+        <p>Enter a Chess.com username to see their public stats, pulled live from the Chess.com PubAPI.</p>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -95,23 +93,33 @@ export function About() {
 
         {error && <div className="stat-error">{error}</div>}
 
-        {blitz && (
+        {stats && (
           <div id="chesscomStats" className={`stat-box bg-light text-dark ${loading ? 'stale' : ''}`}>
+            {stats.avatar && <img className="stat-avatar" src={stats.avatar} alt={`${stats.username}'s Chess.com avatar`} />}
             <div>
-              Username: <span className="stat-username">{stats.username}</span>
+              Username:{' '}
+              <a className="stat-username" href={stats.url}>
+                {stats.username}
+              </a>
             </div>
-            <div>
-              Blitz rating: <span className="stat-rating">{blitz.last.rating}</span>
-            </div>
-            <div>
-              Wins: <span className="stat-wins">{blitz.record.win}</span>
-            </div>
-            <div>
-              Losses: <span className="stat-losses">{blitz.record.loss}</span>
-            </div>
-            <div>
-              Draws: <span className="stat-draws">{blitz.record.draw}</span>
-            </div>
+            {stats.timeClass ? (
+              <>
+                <div>
+                  {stats.timeClass} rating: <span className="stat-rating">{stats.rating}</span>
+                </div>
+                <div>
+                  Wins: <span className="stat-wins">{stats.win}</span>
+                </div>
+                <div>
+                  Losses: <span className="stat-losses">{stats.loss}</span>
+                </div>
+                <div>
+                  Draws: <span className="stat-draws">{stats.draw}</span>
+                </div>
+              </>
+            ) : (
+              <div>No rated games yet.</div>
+            )}
           </div>
         )}
       </div>

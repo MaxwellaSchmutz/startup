@@ -105,9 +105,14 @@ app.use((err, _req, res, _next) => {
   res.status(err.status || 500).send({ type: err.name, msg: err.message });
 });
 
-// Any other path is a client-side route (/play, /leaderboard, ...): serve the app
-app.use((_req, res) => {
-  res.sendFile('index.html', { root: 'public' });
+// Any other path is a client-side route (/play, /leaderboard, ...): serve the
+// app. A missing file like /logo.png is a real 404, not the app's HTML.
+app.use((req, res) => {
+  if (/\.\w+$/.test(req.path)) {
+    res.status(404).send({ msg: 'Not found' });
+  } else {
+    res.sendFile('index.html', { root: 'public' });
+  }
 });
 
 // Trims and normalizes the email so " Max@BYU.edu" and "max@byu.edu" are one account

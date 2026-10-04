@@ -14,3 +14,6 @@ dist
 
 # Claude Code agent worktrees
 .claude/
+
+# local production test copy of the frontend (deployService.sh builds its own)
+service/public

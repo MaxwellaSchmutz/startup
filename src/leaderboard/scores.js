@@ -1,21 +1,27 @@
-// Mocked score database. Completed games are kept in localStorage until the
-// DB deliverable stores them in MongoDB through the backend service.
+// Score calls to the backend service (service/index.js). The leaderboard is
+// public; saving a score requires the auth cookie, and the server fills in the
+// player's name and the date itself.
 
-const scoresKey = 'scores';
-const maxScores = 10;
-
-export function loadScores() {
-  try {
-    return JSON.parse(localStorage.getItem(scoresKey)) || [];
-  } catch {
-    return [];
+export async function loadScores() {
+  const response = await fetch('/api/scores');
+  if (!response.ok) {
+    throw new Error(`Could not load the leaderboard (${response.status}).`);
   }
+  return response.json();
 }
 
-// score: { name, moves, result, date }. Keeps the top ten by moves survived;
-// a new score that ties an old one ranks below it, since the old one got there first.
-export function saveScore(score) {
-  const scores = [...loadScores(), score].sort((a, b) => b.moves - a.moves).slice(0, maxScores);
-  localStorage.setItem(scoresKey, JSON.stringify(scores));
-  return scores;
+// result: 'checkmate' | 'resign' | 'time' | 'draw' | 'win'
+export async function saveScore({ moves, result }) {
+  const response = await fetch('/api/score', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ moves, result }),
+  });
+  if (response.status === 401) {
+    throw new Error('Your session expired, so this game was not saved. Log in again to save your next one.');
+  }
+  if (!response.ok) {
+    throw new Error('The server could not save this game.');
+  }
+  return response.json();
 }

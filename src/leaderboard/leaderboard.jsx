@@ -5,12 +5,20 @@ import './leaderboard.css';
 
 export function Leaderboard({ userName }) {
   const [scores, setScores] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState('');
 
-  // Load once when the view opens. In the DB deliverable this becomes a fetch
-  // to the backend, which is why it lives in an effect rather than in render.
+  // Fetch the leaderboard from the service when the view opens.
   React.useEffect(() => {
-    setScores(loadScores());
+    loadScores()
+      .then(setScores)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, []);
+
+  let emptyMessage = 'No games yet. Be the first to survive!';
+  if (loading) emptyMessage = 'Loading the leaderboard...';
+  if (error) emptyMessage = error;
 
   return (
     <main className="container-fluid bg-secondary text-center">
@@ -29,13 +37,13 @@ export function Leaderboard({ userName }) {
         <tbody>
           {scores.length === 0 ? (
             <tr className="empty-state">
-              <td colSpan="4">No games yet. Be the first to survive!</td>
+              <td colSpan="4">{emptyMessage}</td>
             </tr>
           ) : (
             scores.map((score, i) => (
-              <tr key={i} className={userName && score.name === userName ? 'own-score' : ''}>
+              <tr key={i} className={userName && score.name === displayName(userName) ? 'own-score' : ''}>
                 <td>{i + 1}</td>
-                <td>{displayName(score.name)}</td>
+                <td>{score.name}</td>
                 <td>{score.moves}</td>
                 <td>{score.date}</td>
               </tr>
