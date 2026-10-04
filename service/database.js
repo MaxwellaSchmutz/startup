@@ -60,10 +60,12 @@ function isReady() {
 }
 
 function getUser(email) {
+  if (typeof email !== 'string') return Promise.resolve(null);
   return userCollection.findOne({ email });
 }
 
 function getUserByToken(token) {
+  if (typeof token !== 'string') return Promise.resolve(null);
   return userCollection.findOne({ token });
 }
 
@@ -105,6 +107,14 @@ async function getPlayerGames(email) {
   return { best, recent, total };
 }
 
+// Public totals: games played, registered players, and the best game ever
+async function getStats() {
+  const totalGames = await scoreCollection.countDocuments();
+  const totalPlayers = await userCollection.countDocuments();
+  const best = await scoreCollection.findOne({}, { sort: { moves: -1, createdAt: 1 }, projection: { _id: 0, moves: 1 } });
+  return { totalGames, totalPlayers, bestMoves: best?.moves ?? 0 };
+}
+
 module.exports = {
   isReady,
   getUser,
@@ -115,4 +125,5 @@ module.exports = {
   addScore,
   getHighScores,
   getPlayerGames,
+  getStats,
 };

@@ -23,6 +23,8 @@ function tokenFromCookies(header = '') {
 function peerProxy(httpServer) {
   const socketServer = new WebSocketServer({ server: httpServer, path: '/ws', maxPayload: 1024 });
 
+  socketServer.on('error', () => {});
+
   function broadcast(message) {
     const data = JSON.stringify(message);
     socketServer.clients.forEach((client) => {
@@ -40,6 +42,7 @@ function peerProxy(httpServer) {
       socket.isAlive = true;
     });
     socket.on('close', broadcastPresence);
+    socket.on('error', () => socket.terminate());
 
     socket.on('message', async (data) => {
       let message;
@@ -49,12 +52,18 @@ function peerProxy(httpServer) {
         return;
       }
       if (message?.type !== 'gameStart' || !DB.isReady()) return;
+      if (Date.now() - (socket.lastStart || 0) < 5000) return;
+      socket.lastStart = Date.now();
 
       // Look the player up on every message, so a logged-out token stops working
-      const token = tokenFromCookies(request.headers.cookie);
-      const user = token && (await DB.getUserByToken(token));
-      if (user) {
-        broadcast({ type: 'gameStart', name: user.email.split('@')[0] });
+      try {
+        const token = tokenFromCookies(request.headers.cookie);
+        const user = token && (await DB.getUserByToken(token));
+        if (user) {
+          broadcast({ type: 'gameStart', name: user.email.split('@')[0] });
+        }
+      } catch {
+        return;
       }
     });
 
