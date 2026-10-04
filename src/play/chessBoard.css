@@ -1,0 +1,214 @@
+.board-wrap {
+  --board-size: min(90vw, 500px);
+  position: relative;
+  width: var(--board-size);
+  margin: 0 auto;
+  border-radius: var(--radius-board);
+  box-shadow: var(--shadow-board);
+}
+
+.chess-board {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: var(--board-size);
+  aspect-ratio: 1 / 1;
+  table-layout: fixed;
+  margin: 0;
+  border-radius: var(--radius-board);
+  overflow: hidden;
+  touch-action: manipulation;
+}
+
+.chess-board.interactive {
+  touch-action: none;
+}
+
+.chess-board td {
+  position: relative;
+  height: calc(var(--board-size) / 8);
+  padding: 0;
+  border: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--dur-fast) ease;
+}
+
+.chess-board td.light {
+  background-color: var(--square-light);
+}
+
+.chess-board td.dark {
+  background-color: var(--square-dark);
+}
+
+.chess-board.interactive td {
+  cursor: pointer;
+}
+
+.chess-board.interactive td.has-white {
+  cursor: grab;
+}
+
+.chess-board.is-dragging,
+.chess-board.is-dragging td {
+  cursor: grabbing;
+}
+
+.chess-board td::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: transparent;
+  transition: background-color var(--dur) var(--ease);
+}
+
+.chess-board td.last-move::before {
+  background-color: var(--square-last);
+}
+
+.chess-board td.selected::before {
+  background-color: var(--square-selected);
+}
+
+.chess-board.interactive td.has-white:hover::before {
+  background-color: rgba(255, 255, 255, 0.16);
+}
+
+.chess-board.interactive td.selected:hover::before {
+  background-color: var(--square-selected);
+}
+
+.chess-board td.in-check::before {
+  background: radial-gradient(circle, rgba(255, 70, 60, 0.95) 0%, rgba(235, 45, 45, 0.65) 32%, rgba(200, 30, 30, 0) 72%);
+  animation: check-pulse 1.4s var(--ease) infinite alternate;
+}
+
+.chess-board td.drag-over::before {
+  background-color: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.75);
+}
+
+.chess-board td:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+  z-index: 2;
+}
+
+.chess-board .piece {
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  width: 90%;
+  height: 90%;
+  z-index: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 1.5px 1px rgba(0, 0, 0, 0.28));
+  -webkit-user-drag: none;
+}
+
+.chess-board .piece.arrived {
+  z-index: 3;
+  animation: piece-slide 190ms var(--ease) both;
+}
+
+.chess-board td.drag-from .piece {
+  opacity: 0.35;
+}
+
+.drag-ghost {
+  position: fixed;
+  z-index: 2000;
+  pointer-events: none;
+  transform: translate(-50%, -55%);
+  filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.45));
+}
+
+.chess-board td.target::after,
+.chess-board td.capture-target::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  z-index: 2;
+  transition: transform var(--dur-fast) var(--ease), background-color var(--dur-fast) ease;
+  animation: dot-in 160ms var(--ease) backwards;
+}
+
+.chess-board td.target::after {
+  inset: 36%;
+  background: rgba(16, 24, 16, 0.26);
+}
+
+.chess-board td.target:hover::after {
+  transform: scale(1.35);
+  background: rgba(16, 24, 16, 0.36);
+}
+
+.chess-board td.capture-target::after {
+  inset: 3%;
+  background: radial-gradient(circle, transparent 66%, rgba(16, 24, 16, 0.3) 67%);
+}
+
+.chess-board td.capture-target:hover::before {
+  background-color: rgba(16, 24, 16, 0.18);
+}
+
+.chess-board .coord {
+  position: absolute;
+  z-index: 2;
+  font-family: var(--font-ui);
+  font-size: max(10px, calc(var(--board-size) * 0.024));
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.chess-board .coord-rank {
+  top: 3%;
+  left: 3%;
+}
+
+.chess-board .coord-file {
+  right: 3%;
+  bottom: 2%;
+}
+
+.chess-board td.light .coord {
+  color: var(--square-dark);
+}
+
+.chess-board td.dark .coord {
+  color: var(--square-light);
+}
+
+.board-wrap.small {
+  --board-size: min(84vw, 280px);
+  box-shadow: var(--shadow-2);
+}
+
+@keyframes piece-slide {
+  from {
+    transform: translate(calc(var(--dx) * 111.11%), calc(var(--dy) * 111.11%));
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes dot-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+@keyframes check-pulse {
+  from {
+    opacity: 0.75;
+  }
+  to {
+    opacity: 1;
+  }
+}
