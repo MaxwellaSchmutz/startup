@@ -1,0 +1,19 @@
+{
+  "name": "stockfish-survival-service",
+  "version": "1.0.0",
+  "description": "Stockfish Survival backend: auth, scores, and the bundled frontend",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Maxwell Schmutz",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.2.1",
+    "uuid": "^11.1.1"
+  },
+  "private": true
+}

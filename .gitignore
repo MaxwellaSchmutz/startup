@@ -11,3 +11,6 @@ nov5.txt
 # NPM packages and Vite build output
 node_modules
 dist
+
+# Claude Code agent worktrees
+.claude/
