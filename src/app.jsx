@@ -19,14 +19,12 @@ import { currentUser, displayName, forgetUser, logout, verifySession } from './l
 import { Icon } from './icons';
 import { ToastProvider, useToast } from './toast';
 import { loadBoardTheme } from './play/boardTheme';
+import { repoUrl, siteName, siteUrl } from './site';
 
 const Leaderboard = React.lazy(() => import('./leaderboard/leaderboard').then((m) => ({ default: m.Leaderboard })));
 const Learn = React.lazy(() => import('./learn/learn').then((m) => ({ default: m.Learn })));
 const About = React.lazy(() => import('./about/about').then((m) => ({ default: m.About })));
 
-const siteName = 'Stockfish Survival';
-const repoUrl = 'https://github.com/MaxwellaSchmutz/startup';
-const siteUrl = 'https://startup.beatstockfish.click';
 const pages = {
   '/': {
     title: `${siteName} · Survive Stockfish as long as you can`,
@@ -97,14 +95,13 @@ class PageErrorBoundary extends React.Component {
     const chunkError = /dynamically imported module|Importing a module script failed|Failed to fetch/i.test(
       String(error?.message),
     );
+    if (!chunkError || !navigator.onLine) return;
     try {
-      if (chunkError && navigator.onLine && sessionStorage.getItem('chunkReload') !== '1') {
+      if (sessionStorage.getItem('chunkReload') !== '1') {
         sessionStorage.setItem('chunkReload', '1');
         window.location.reload();
       }
-    } catch {
-      return;
-    }
+    } catch {}
   }
 
   componentDidUpdate(prevProps) {
@@ -141,9 +138,7 @@ function AppRoutes() {
     const timer = setTimeout(() => {
       try {
         sessionStorage.removeItem('chunkReload');
-      } catch {
-        return;
-      }
+      } catch {}
     }, 5000);
     return () => clearTimeout(timer);
   }, [pathname]);
@@ -181,7 +176,7 @@ function SiteNav({ userName, onLogin, onLogout }) {
 
   React.useEffect(() => setExpanded(false), [pathname, userName]);
 
-  function login() {
+  function openLogin() {
     setExpanded(false);
     onLogin();
   }
@@ -198,7 +193,7 @@ function SiteNav({ userName, onLogin, onLogout }) {
           <img src="/favicon.svg" alt="" width="30" height="30" />
           <span className="brand-text">Stockfish Survival</span>
         </Navbar.Brand>
-        {!userName && <LoginButton onLogin={login} className="login-compact d-md-none" />}
+        {!userName && <LoginButton onLogin={openLogin} className="login-compact d-md-none" />}
         <Navbar.Toggle aria-controls="main-nav" aria-expanded={expanded} label="Menu" />
         <Navbar.Collapse id="main-nav">
           <Nav as="ul" className="me-auto site-nav-links">
@@ -237,7 +232,7 @@ function SiteNav({ userName, onLogin, onLogout }) {
                 </NavDropdown.Item>
               </NavDropdown>
             ) : (
-              <LoginButton onLogin={login} />
+              <LoginButton onLogin={openLogin} />
             )}
           </Nav>
         </Navbar.Collapse>
@@ -272,7 +267,7 @@ function AppShell() {
     verifySession().then((email) => setUserName(email || ''));
   }, []);
 
-  const openAuth = React.useCallback((reason = { kind: 'login' }) => setAuthModal({ show: true, reason }), []);
+  const openAuth = React.useCallback((reason) => setAuthModal({ show: true, reason }), []);
 
   async function handleAuthenticated(email) {
     setUserName(email);
@@ -304,7 +299,7 @@ function AppShell() {
   }
 
   const auth = React.useMemo(
-    () => ({ userName, openAuth, logout: handleLogout, notify, sessionExpired }),
+    () => ({ userName, openAuth, notify, sessionExpired }),
     [userName, openAuth, notify, sessionExpired],
   );
 

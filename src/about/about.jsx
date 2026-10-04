@@ -3,6 +3,7 @@ import Button from 'react-bootstrap/Button';
 import Spinner from 'react-bootstrap/Spinner';
 import { getPlayerStats } from './chesscomService';
 import { Icon } from '../icons';
+import { repoUrl } from '../site';
 import './about.css';
 
 const defaultPlayer = 'MagnusCarlsen';
@@ -12,22 +13,22 @@ export function About() {
   const [stats, setStats] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
-  const requestRef = React.useRef(0);
+  const latestRequest = React.useRef(0);
 
   async function lookUp(name) {
-    const id = ++requestRef.current;
+    const id = ++latestRequest.current;
     setLoading(true);
     setError('');
     try {
       const result = await getPlayerStats(name);
-      if (id === requestRef.current) setStats(result);
+      if (id === latestRequest.current) setStats(result);
     } catch (err) {
-      if (id === requestRef.current) {
+      if (id === latestRequest.current) {
         setStats(null);
         setError(err.message);
       }
     } finally {
-      if (id === requestRef.current) setLoading(false);
+      if (id === latestRequest.current) setLoading(false);
     }
   }
 
@@ -58,7 +59,7 @@ export function About() {
           <p>A game ends by checkmate, resignation, running out of time on the move clock, or a draw.</p>
           <p className="about-meta">
             This is the startup application for CS 260 by Maxwell Schmutz.
-            <a className="btn btn-outline-light btn-sm repo-link" href="https://github.com/MaxwellaSchmutz/startup">
+            <a className="btn btn-outline-light btn-sm repo-link" href={repoUrl}>
               <Icon name="github" size={15} />
               View the code on GitHub
             </a>

@@ -47,7 +47,6 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
   --space-7: 3rem;
-  --space-8: 4.5rem;
 
   --radius-sm: 6px;
   --radius: 10px;
@@ -136,8 +135,7 @@ body {
 
 h1,
 h2,
-h3,
-.display {
+h3 {
   font-family: var(--font-display);
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -177,10 +175,6 @@ a:hover {
 ::selection {
   background: rgba(226, 182, 92, 0.35);
   color: #fff;
-}
-
-.tabular {
-  font-variant-numeric: tabular-nums;
 }
 
 .player-name {
@@ -311,8 +305,7 @@ main {
 }
 
 .btn-outline-light,
-.btn-outline-secondary,
-.btn-ghost {
+.btn-outline-secondary {
   --bs-btn-color: var(--text);
   --bs-btn-bg: rgba(255, 255, 255, 0.04);
   --bs-btn-border-color: var(--line-strong);

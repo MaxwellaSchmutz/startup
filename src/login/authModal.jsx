@@ -22,15 +22,26 @@ function validate(mode, email, password) {
   return errors;
 }
 
+function isAboutAGame(reason) {
+  return reason?.kind === 'result' || reason?.kind === 'expired';
+}
+
+function modalTitle(reason, mode, saved) {
+  if (saved) return 'Saved to the leaderboard';
+  if (reason?.kind === 'result') return 'Nice game!';
+  if (reason?.kind === 'expired') return 'Log in to save it';
+  return mode === 'create' ? 'Create your account' : 'Welcome back';
+}
+
 function Intro({ reason }) {
-  if (reason?.kind === 'result' || reason?.kind === 'expired') {
+  if (isAboutAGame(reason)) {
     const { moves, result } = reason;
     return (
       <div className="auth-intro auth-result">
         <div className="auth-result-moves">
           <span className="auth-result-number">{moves}</span> move{moves === 1 ? '' : 's'} survived
         </div>
-        <div className="auth-result-detail">{resultLabels[result] ?? result}</div>
+        <div className="auth-result-detail">{resultLabels[result]}</div>
         <p>
           {reason.kind === 'expired'
             ? 'Your session expired before this game was saved. Log in again and it goes straight onto the leaderboard.'
@@ -104,20 +115,10 @@ export function AuthModal({ show, reason, onHide, onAuthenticated }) {
     setTouched(false);
   }
 
-  const title = saved
-    ? 'Saved to the leaderboard'
-    : reason?.kind === 'result'
-      ? 'Nice game!'
-      : reason?.kind === 'expired'
-        ? 'Log in to save it'
-      : mode === 'create'
-        ? 'Create your account'
-        : 'Welcome back';
-
   return (
     <Modal show={show} onHide={onHide} centered className="auth-modal" aria-labelledby="auth-modal-title">
       <Modal.Header closeButton>
-        <Modal.Title id="auth-modal-title">{title}</Modal.Title>
+        <Modal.Title id="auth-modal-title">{modalTitle(reason, mode, saved)}</Modal.Title>
       </Modal.Header>
 
       {saved ? (
@@ -149,7 +150,7 @@ export function AuthModal({ show, reason, onHide, onAuthenticated }) {
           <Modal.Body>
             <Intro reason={reason} />
 
-            <Nav variant="pills" activeKey={mode} onSelect={(key) => switchMode(key)} className="auth-tabs" role="tablist">
+            <Nav variant="pills" activeKey={mode} onSelect={switchMode} className="auth-tabs" role="tablist">
               <Nav.Item>
                 <Nav.Link eventKey="login" role="tab" aria-selected={mode === 'login'}>
                   Log in
@@ -198,7 +199,7 @@ export function AuthModal({ show, reason, onHide, onAuthenticated }) {
             )}
           </Modal.Body>
           <Modal.Footer>
-            {(reason?.kind === 'result' || reason?.kind === 'expired') && (
+            {isAboutAGame(reason) && (
               <Button variant="link" className="me-auto" onClick={onHide}>
                 Not now
               </Button>

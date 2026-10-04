@@ -4,6 +4,15 @@ import { formatDate, formatShortDate, loadMyGames } from './scores';
 import { plural, resultLabels } from '../play/results';
 import { useAuth } from '../login/authContext';
 
+function GamesCard({ busy, children }) {
+  return (
+    <section className="my-games card-surface" aria-busy={busy || undefined}>
+      <h2>Your games</h2>
+      {children}
+    </section>
+  );
+}
+
 export function MyGames({ version }) {
   const [games, setGames] = React.useState(null);
   const [error, setError] = React.useState('');
@@ -20,35 +29,31 @@ export function MyGames({ version }) {
 
   if (error) {
     return (
-      <section className="my-games card-surface">
-        <h2>Your games</h2>
+      <GamesCard>
         <p className="my-games-note">{error}</p>
-      </section>
+      </GamesCard>
     );
   }
   if (!games) {
     return (
-      <section className="my-games card-surface" aria-busy="true">
-        <h2>Your games</h2>
+      <GamesCard busy>
         <p className="my-games-note">Loading your games...</p>
-      </section>
+      </GamesCard>
     );
   }
   if (games.total === 0) {
     return (
-      <section className="my-games card-surface">
-        <h2>Your games</h2>
+      <GamesCard>
         <p className="my-games-note">You haven't finished a game yet. Your games will show up here.</p>
         <Link className="btn btn-primary" to="/">
           Play your first game
         </Link>
-      </section>
+      </GamesCard>
     );
   }
 
   return (
-    <section className="my-games card-surface">
-      <h2>Your games</h2>
+    <GamesCard>
       <div className="my-stats">
         <div className="my-stat">
           <span className="my-stat-label">Personal best</span>
@@ -81,6 +86,6 @@ export function MyGames({ version }) {
           ))}
         </tbody>
       </table>
-    </section>
+    </GamesCard>
   );
 }

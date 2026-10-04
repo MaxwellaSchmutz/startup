@@ -1,8 +1,9 @@
 import React from 'react';
 import { Chess } from 'chess.js';
 import { ChessBoard } from '../play/chessBoard';
+import { plural } from '../play/results';
 
-function load(fen) {
+function loadPosition(fen) {
   const chess = new Chess();
   chess.load(fen, { skipValidation: true });
   return chess;
@@ -15,15 +16,21 @@ function whiteToMove(fen) {
   return parts.join(' ');
 }
 
-// A small practice board: tap a white piece to see where it can go, tap a dot
-// to move it there. Reset puts the starting position back.
-export function BoardDemo({ fen, label, hint, startSquare = null }) {
+function describe(move) {
+  if (move.flags.includes('k') || move.flags.includes('q')) return 'Castled: the king and rook moved together.';
+  if (move.flags.includes('e')) return 'En passant: the pawn captured the pawn beside it.';
+  if (move.promotion) return 'Promoted! The pawn became a queen.';
+  if (move.captured) return `Captured on ${move.to}.`;
+  return `Moved to ${move.to}.`;
+}
+
+export function BoardDemo({ fen, label, hint }) {
   const chessRef = React.useRef(null);
-  if (!chessRef.current) chessRef.current = load(fen);
+  if (!chessRef.current) chessRef.current = loadPosition(fen);
   const chess = chessRef.current;
 
   const [position, setPosition] = React.useState(chess.fen());
-  const [selected, setSelected] = React.useState(startSquare);
+  const [selected, setSelected] = React.useState(null);
   const [lastMove, setLastMove] = React.useState(null);
   const [note, setNote] = React.useState('');
 
@@ -34,11 +41,7 @@ export function BoardDemo({ fen, label, hint, startSquare = null }) {
       const move = chess.move({ from: selected, to: square, promotion: 'q' });
       setLastMove({ from: move.from, to: move.to });
       setNote(describe(move));
-      try {
-        chess.load(whiteToMove(chess.fen()), { skipValidation: true });
-      } catch {
-        // leave it as it is
-      }
+      chess.load(whiteToMove(chess.fen()), { skipValidation: true });
       setSelected(null);
       setPosition(chess.fen());
       return;
@@ -47,7 +50,7 @@ export function BoardDemo({ fen, label, hint, startSquare = null }) {
     if (piece && piece.color === 'w' && square !== selected) {
       setSelected(square);
       const count = new Set(chess.moves({ square, verbose: true }).map((m) => m.to)).size;
-      setNote(`${count} legal move${count === 1 ? '' : 's'} from ${square}.`);
+      setNote(`${plural(count, 'legal move')} from ${square}.`);
     } else {
       setSelected(null);
     }
@@ -56,7 +59,7 @@ export function BoardDemo({ fen, label, hint, startSquare = null }) {
   function reset() {
     chess.load(fen, { skipValidation: true });
     setPosition(chess.fen());
-    setSelected(startSquare);
+    setSelected(null);
     setLastMove(null);
     setNote('');
   }
@@ -68,7 +71,6 @@ export function BoardDemo({ fen, label, hint, startSquare = null }) {
         selected={selected}
         targets={targets}
         lastMove={lastMove}
-        checkSquare={null}
         onSquareClick={onSquareClick}
         label={label}
         className="small"
@@ -83,17 +85,8 @@ export function BoardDemo({ fen, label, hint, startSquare = null }) {
   );
 }
 
-function describe(move) {
-  if (move.flags.includes('k') || move.flags.includes('q')) return 'Castled: the king and rook moved together.';
-  if (move.flags.includes('e')) return 'En passant: the pawn captured the pawn beside it.';
-  if (move.promotion) return 'Promoted! The pawn became a queen.';
-  if (move.captured) return `Captured on ${move.to}.`;
-  return `Moved to ${move.to}.`;
-}
-
-// A position to look at, not play: used for check, checkmate and stalemate.
 export function BoardDiagram({ fen, label, caption, highlight = null }) {
-  const chess = React.useMemo(() => load(fen), [fen]);
+  const chess = React.useMemo(() => loadPosition(fen), [fen]);
   return (
     <figure className="board-demo">
       <ChessBoard board={chess.board()} checkSquare={highlight} label={label} className="small" />
