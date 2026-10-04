@@ -2,6 +2,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const uuid = require('uuid');
+const DB = require('./database.js');
 
 const app = express();
 
@@ -9,13 +10,7 @@ const app = express();
 const port = process.argv.length > 2 ? process.argv[2] : 4000;
 
 const authCookieName = 'token';
-const maxScores = 10;
 const gameResults = ['checkmate', 'resign', 'time', 'draw', 'win'];
-
-// In-memory storage until the DB deliverable moves these into MongoDB, so a
-// restart of the service forgets every account and score.
-let users = [];
-let scores = [];
 
 app.use(express.json());
 app.use(cookieParser());
@@ -31,12 +26,16 @@ apiRouter.post('/auth/create', async (req, res) => {
   const { email, password } = credentials(req.body);
   if (!email || !password) {
     res.status(400).send({ msg: 'Enter a valid email address and a password.' });
-  } else if (await findUser('email', email)) {
-    res.status(409).send({ msg: `An account for ${email} already exists. Try logging in instead.` });
   } else {
-    const user = await createUser(email, password);
-    setAuthCookie(res, user.token);
-    res.send({ email: user.email });
+    try {
+      const user = await createUser(email, password);
+      setAuthCookie(res, user.token);
+      res.send({ email: user.email });
+    } catch (err) {
+      // The unique email index rejects a second account for the same address
+      if (err.code !== 11000) throw err;
+      res.status(409).send({ msg: `An account for ${email} already exists. Try logging in instead.` });
+    }
   }
 });
 
@@ -46,6 +45,7 @@ apiRouter.post('/auth/login', async (req, res) => {
   const user = await findUser('email', email);
   if (user && password && (await bcrypt.compare(password, user.password))) {
     user.token = uuid.v4();
+    await DB.setToken(user.email, user.token);
     setAuthCookie(res, user.token);
     res.send({ email: user.email });
     return;
@@ -57,7 +57,7 @@ apiRouter.post('/auth/login', async (req, res) => {
 apiRouter.delete('/auth/logout', async (req, res) => {
   const user = await findUser('token', req.cookies[authCookieName]);
   if (user) {
-    delete user.token;
+    await DB.removeToken(user.email);
   }
   res.clearCookie(authCookieName);
   res.status(204).end();
@@ -80,14 +80,19 @@ apiRouter.get('/user/me', verifyAuth, (req, res) => {
 });
 
 // GetScores: the public leaderboard
-apiRouter.get('/scores', (_req, res) => {
-  res.send(scores);
+apiRouter.get('/scores', async (_req, res) => {
+  res.send(await DB.getHighScores());
+});
+
+// GetMyGames: the logged-in player's recent games and personal best
+apiRouter.get('/user/games', verifyAuth, async (req, res) => {
+  res.send(await DB.getPlayerGames(req.user.email));
 });
 
 // SubmitScore: record a finished game for the logged-in player. The name and
 // date come from the server, not the request, so nobody can post as someone else.
-// Only the part of the email before the @ is stored, since the leaderboard is public.
-apiRouter.post('/score', verifyAuth, (req, res) => {
+// The leaderboard only ever returns the part of the email before the @.
+apiRouter.post('/score', verifyAuth, async (req, res) => {
   const moves = Number(req.body?.moves);
   const result = req.body?.result;
   if (!Number.isInteger(moves) || moves < 0 || moves > 1000 || !gameResults.includes(result)) {
@@ -95,9 +100,11 @@ apiRouter.post('/score', verifyAuth, (req, res) => {
     return;
   }
 
-  const date = new Date().toLocaleDateString('en-US', { timeZone: 'America/Denver' });
-  scores = updateScores({ name: req.user.email.split('@')[0], moves, result, date });
-  res.send(scores);
+  const createdAt = new Date();
+  const date = createdAt.toLocaleDateString('en-US', { timeZone: 'America/Denver' });
+  const email = req.user.email;
+  await DB.addScore({ email, name: email.split('@')[0], moves, result, date, createdAt });
+  res.send(await DB.getHighScores());
 });
 
 // Default error handler, including malformed JSON bodies
@@ -122,22 +129,16 @@ function credentials(body) {
   return { email: email.includes('@') ? email : '', password };
 }
 
-// Keeps the top ten by moves survived; a new score that ties an old one ranks
-// below it, since the old one got there first.
-function updateScores(newScore) {
-  return [...scores, newScore].sort((a, b) => b.moves - a.moves).slice(0, maxScores);
-}
-
 async function createUser(email, password) {
   const passwordHash = await bcrypt.hash(password, 10);
   const user = { email, password: passwordHash, token: uuid.v4() };
-  users.push(user);
+  await DB.addUser(user);
   return user;
 }
 
 async function findUser(field, value) {
   if (!value) return null;
-  return users.find((u) => u[field] === value);
+  return field === 'token' ? DB.getUserByToken(value) : DB.getUser(value);
 }
 
 function setAuthCookie(res, authToken) {
