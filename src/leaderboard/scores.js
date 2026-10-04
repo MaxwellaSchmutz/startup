@@ -10,6 +10,15 @@ export async function loadScores() {
   return response.json();
 }
 
+// The logged-in player's { best, recent, total } from the database
+export async function loadMyGames() {
+  const response = await fetch('/api/user/games');
+  if (!response.ok) {
+    throw new Error(response.status === 401 ? 'Log in to see your games.' : 'Could not load your games.');
+  }
+  return response.json();
+}
+
 // result: 'checkmate' | 'resign' | 'time' | 'draw' | 'win'
 export async function saveScore({ moves, result }) {
   const response = await fetch('/api/score', {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { loadScores } from './scores';
+import { MyGames } from './myGames';
 import { displayName } from '../login/authService';
 import './leaderboard.css';
 
@@ -51,6 +52,8 @@ export function Leaderboard({ userName }) {
           )}
         </tbody>
       </table>
+
+      {userName && <MyGames />}
     </main>
   );
 }

@@ -47,3 +47,29 @@
   text-decoration: underline;
   text-decoration-color: rgba(0, 0, 0, 0.35);
 }
+
+/* "Your games": the logged-in player's own history, below the public table */
+.my-games {
+  width: 100%;
+  max-width: 600px;
+  margin-top: 1em;
+}
+
+.my-games .table td,
+.my-games .table tbody tr:first-child td {
+  /* override the top-row gold and truncation rules meant for the public table;
+     the second selector matches the gold rule's specificity so it wins by order */
+  color: inherit;
+  font-weight: normal;
+  white-space: normal;
+}
+
+.personal-best {
+  color: rgb(246, 239, 158);
+  font-weight: bold;
+}
+
+.my-games-note {
+  opacity: 0.85;
+  font-style: italic;
+}
