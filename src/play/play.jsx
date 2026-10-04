@@ -5,7 +5,7 @@ import './play.css';
 
 export function Play({ userName }) {
   return (
-    <main className="bg-secondary">
+    <main className="bg-secondary play-view">
       <ChessGame userName={userName} />
       <LiveActivity userName={userName} />
     </main>

@@ -16,6 +16,31 @@
   font-weight: bold;
 }
 
+/* Phones: with four equal columns the rank number got as much room as the
+   player's name. Pin the narrow columns (fixed layout reads widths from the
+   header row) so the name gets what's left, and tighten the text a little. */
+@media (max-width: 575.98px) {
+  .table {
+    font-size: 0.875rem;
+  }
+
+  .table > :not(caption) > * > * {
+    padding: 0.5rem 0.35rem;
+  }
+
+  .table th:nth-child(1) {
+    width: 2.25rem;
+  }
+
+  .table th:nth-child(3) {
+    width: 4.75rem;
+  }
+
+  .table th:nth-child(4) {
+    width: 5.5rem;
+  }
+}
+
 /* the logged-in player's own games */
 .table tbody tr.own-score td {
   font-style: italic;

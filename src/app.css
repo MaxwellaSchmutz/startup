@@ -7,7 +7,10 @@
 .body {
   display: flex;
   flex-direction: column;
-  min-width: 375px;
+  /* fill the screen so the footer sits at the bottom of short views. No
+     min-width: a fixed 375px floor made 320-360px phones scroll sideways */
+  min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
 }
 
@@ -22,13 +25,13 @@ h2,
 }
 
 header {
-  flex: 0 1 80px;
+  flex: none;
 }
 
 main {
-  /* grow: 1, shrink: 1, basis: calc(...) written out explicitly so the
-     shorthand doesn't need to be mentally disambiguated */
-  flex: 1 1 calc(100vh - 110px);
+  /* grow: 1, shrink: 0, basis: auto written out explicitly; the header is
+     in the normal flow now, so main just takes whatever height is left */
+  flex: 1 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -43,22 +46,8 @@ footer {
 }
 
 .navbar {
-  /* keep brand + links on one row instead of wrapping to a second line and
-     getting covered by main content, which only reserves a fixed 80px */
-  flex-wrap: nowrap;
-}
-
-/* the compound selector (element + .navbar-nav) outranks Bootstrap's bare
-   .navbar-nav on specificity, so flex-direction wins the cascade without !important */
-menu.navbar-nav {
-  flex: 1;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  list-style: none;
-  /* fall back to a horizontal scroll, contained within the nav bar, instead
-     of letting nav content overflow the page on very narrow viewports */
-  overflow-x: auto;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
 }
 
 .navbar-brand {
@@ -67,51 +56,68 @@ menu.navbar-nav {
   white-space: nowrap;
 }
 
-menu .nav-item {
-  padding: 0 0.3em;
+/* Bootstrap resets ul/ol for .navbar-nav but not the browser's menu margins */
+menu.navbar-nav {
+  margin: 0;
 }
 
-menu .nav-link {
+.navbar .nav-link,
+.navbar-toggler {
   white-space: nowrap;
+  /* skip the double-tap-to-zoom wait so a tap navigates straight away */
+  touch-action: manipulation;
 }
 
 footer a {
   float: right;
 }
 
-@media (max-width: 480px) {
+/* Hamburger menu on phones: each link is a full-width row, at least 44px
+   tall, so it's an easy thumb target */
+@media (max-width: 767.98px) {
   .navbar-brand {
-    font-size: 1rem;
-    margin-right: 0.5rem;
+    font-size: 1.1rem;
   }
-  menu .nav-link {
-    padding: 0.4rem 0.5rem;
-    font-size: 0.9rem;
+  .navbar .nav-link {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 0.5rem;
   }
 }
 
+@media (min-width: 768px) {
+  .navbar .nav-item {
+    padding: 0 0.3em;
+  }
+}
+
+/* Short screens (phone in landscape): the nav stays, so the user can still get
+   around, but slimmed down so the board gets the height. The footer goes. */
 @media (max-height: 600px) {
-  header {
-    display: none;
+  .navbar {
+    padding-top: 0.15rem;
+    padding-bottom: 0.15rem;
   }
   footer {
     display: none;
   }
-  main {
-    flex: 1 100vh;
-  }
 }
 
-/* logged-in player's name at the right end of the nav bar */
+/* logged-in player's name at the right end of the nav bar (in the hamburger
+   menu on phones). Long emails get cut short instead of crowding the links. */
 .nav-user {
-  padding: 0 0.5em;
+  display: block;
+  padding: 0.5rem;
+  max-width: 16em;
+  overflow: hidden;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-/* no room for the name next to the links on phones; Home and Play show it */
-@media (max-width: 600px) {
+@media (min-width: 768px) {
   .nav-user {
-    display: none;
+    margin-left: auto;
   }
 }
 

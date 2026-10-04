@@ -2,6 +2,8 @@ import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './app.css';
 
+import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
 import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom';
 import { Login } from './login/login';
 import { Play } from './play/play';
@@ -34,33 +36,40 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="body bg-dark text-light">
-        <header className="container-fluid">
-          <nav className="navbar fixed-top navbar-dark">
+        {/* Sticky and in the normal flow (not fixed-top), so the page below always
+            starts under the nav bar whatever height it ends up on a given screen.
+            Below the md breakpoint the links collapse behind a hamburger button;
+            collapseOnSelect closes the menu again once a link is tapped. */}
+        <header className="sticky-top">
+          <Navbar expand="md" collapseOnSelect variant="dark" bg="dark">
             <div className="navbar-brand">Stockfish Survival</div>
-            <menu className="navbar-nav">
-              <li className="nav-item">
-                <NavLink className="nav-link" to="">
-                  Home
-                </NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink className="nav-link" to="play">
-                  Play
-                </NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink className="nav-link" to="leaderboard">
-                  Leaderboard
-                </NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink className="nav-link" to="about">
-                  About
-                </NavLink>
-              </li>
-            </menu>
-            {authenticated && <span className="navbar-text player-name nav-user">{displayName(userName)}</span>}
-          </nav>
+            <Navbar.Toggle aria-controls="main-nav" />
+            <Navbar.Collapse id="main-nav">
+              <Nav as="menu">
+                <Nav.Item as="li">
+                  <Nav.Link as={NavLink} eventKey="home" to="">
+                    Home
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item as="li">
+                  <Nav.Link as={NavLink} eventKey="play" to="play">
+                    Play
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item as="li">
+                  <Nav.Link as={NavLink} eventKey="leaderboard" to="leaderboard">
+                    Leaderboard
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item as="li">
+                  <Nav.Link as={NavLink} eventKey="about" to="about">
+                    About
+                  </Nav.Link>
+                </Nav.Item>
+              </Nav>
+              {authenticated && <Navbar.Text className="player-name nav-user">{displayName(userName)}</Navbar.Text>}
+            </Navbar.Collapse>
+          </Navbar>
         </header>
 
         <Routes>

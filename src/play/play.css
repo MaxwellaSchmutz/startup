@@ -36,10 +36,16 @@
   width: 6em;
 }
 
+/* One number drives the board's width, rank height, and glyph size, so the
+   media queries below only have to change this to resize the whole board */
+.play-view {
+  --board-size: min(90vw, 500px);
+}
+
 /* Chessboard rendered with pure CSS instead of the bgcolor attribute on each td */
 #board {
   border-collapse: collapse;
-  width: min(90vw, 500px);
+  width: var(--board-size);
   aspect-ratio: 1 / 1;
   table-layout: fixed;
   margin: 0 auto;
@@ -48,13 +54,14 @@
 
 #board td {
   /* every rank is 1/8 of the board, so the empty middle ranks don't collapse */
-  height: calc(min(90vw, 500px) / 8);
+  height: calc(var(--board-size) / 8);
   padding: 0;
   /* dark ink on both square colors; the inherited text-light made the black pieces look white */
   color: #111;
   text-align: center;
   vertical-align: middle;
-  font-size: min(8vw, 44px);
+  /* 44px on the full 500px board, scaled down with it */
+  font-size: calc(var(--board-size) * 0.088);
   line-height: 1;
 }
 
@@ -72,6 +79,14 @@
   position: relative;
   cursor: pointer;
   user-select: none;
+  /* a tap selects the square right away instead of waiting to see if it's a
+     double-tap zoom; the selected highlight replaces the gray tap flash */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.game-status button {
+  touch-action: manipulation;
 }
 
 /* Both sides use the filled glyphs; color and an outline tell them apart */
@@ -154,9 +169,89 @@
   opacity: 0.7;
 }
 
-@media (orientation: portrait) {
+/* Phones in portrait: the board takes the full width (less a small margin),
+   and the status row stays one compact row (moves, clock, and the stacked
+   buttons side by side) instead of a tall column that pushed the board off screen */
+@media (max-width: 575.98px) {
+  .play-view {
+    --board-size: min(100vw - 1rem, 500px);
+    gap: 0.5em;
+    padding: 0.5em 0;
+  }
+
+  .players {
+    padding: 0 0.5em;
+  }
+
   .game-status {
-    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 0.75em;
+  }
+
+  .game-status .stat {
+    align-items: center;
+  }
+
+  /* let "Moves survived" wrap onto two lines rather than widen the row */
+  .game-status label {
+    max-width: 5.5rem;
+    font-size: 0.7rem;
+    line-height: 1.2;
+  }
+
+  /* 1.1rem keeps the read-only inputs above 16px, so iOS won't zoom on a tap */
+  .game-status input {
+    width: 5rem;
+    font-size: 1.1rem;
+  }
+
+  .game-status .stat:last-child {
+    gap: 0.25em;
+  }
+
+  .game-status button {
+    min-height: 40px;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  .game-message {
+    padding: 0 0.5em;
+  }
+
+  .play-view > div:last-child {
+    padding: 0 0.5em;
+  }
+}
+
+/* Phones in landscape: there's width to spare but little height, so the board
+   goes on the left, sized to the height under the slim nav bar, and the
+   player, clock, buttons, and messages stack in a column on its right */
+@media (orientation: landscape) and (max-height: 500px) {
+  .play-view {
+    /* 4.25rem: the slim nav bar (about 46px), this view's top and bottom
+       padding, and the board's border, which sits outside the ranks' height */
+    --board-size: min(100dvh - 4.25rem, 500px, 55vw);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-auto-rows: min-content;
+    align-content: start;
+    gap: 0.5em 1em;
+    padding: 0.5em;
+  }
+
+  .play-view #board {
+    grid-column: 1;
+    grid-row: 1 / span 5;
+    margin: 0;
+  }
+
+  .play-view > :not(#board) {
+    grid-column: 2;
+  }
+
+  .players {
+    padding: 0;
   }
 }
 

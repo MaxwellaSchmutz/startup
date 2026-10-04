@@ -62,3 +62,19 @@
 .stat-username {
   color: inherit;
 }
+
+/* Narrow phones: label, field, and "Look up stats" on one line left the field
+   only ~70px wide, so the button drops to its own full-width row instead.
+   (Only the Chess.com lookup has a button inside an input group.) */
+@media (max-width: 400px) {
+  .input-group > .form-control:has(+ .btn) {
+    border-top-right-radius: var(--bs-border-radius);
+    border-bottom-right-radius: var(--bs-border-radius);
+  }
+
+  .input-group > .btn {
+    width: 100%;
+    margin-top: 0.5rem;
+    border-radius: var(--bs-border-radius);
+  }
+}
