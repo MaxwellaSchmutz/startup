@@ -1,14 +1,18 @@
 import React from 'react';
 import { GameEvent, GameNotifier } from './gameNotifier';
 import { displayName } from '../login/authService';
-import { resultText } from './results';
+import { plural, resultText } from './results';
 
 const maxEvents = 8;
 
+function othersOnline(count) {
+  if (count === 0) return 'no one else';
+  return count === 1 ? '1 other person' : `${count} other people`;
+}
+
 function describe(event) {
   if (event.type === GameEvent.Start) return 'started a new game';
-  const { moves, result } = event;
-  return `survived ${moves} move${moves === 1 ? '' : 's'} (${resultText[result] ?? result})`;
+  return `survived ${plural(event.moves, 'move')} (${resultText[event.result] ?? event.result})`;
 }
 
 export function LiveActivity({ userName }) {
@@ -45,7 +49,7 @@ export function LiveActivity({ userName }) {
         <p className={`live-status ${connected ? 'live' : 'offline'}`}>
           <span className="live-dot" aria-hidden="true" />
           {connected
-            ? `Live · ${others === 0 ? 'no one else' : others === 1 ? '1 other person' : `${others} other people`} on the site`
+            ? `Live · ${othersOnline(others)} on the site`
             : 'Reconnecting...'}
         </p>
       </div>

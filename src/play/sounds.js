@@ -1,7 +1,3 @@
-// Tiny synthesized sound effects with the WebAudio API, so there are no audio
-// files to download. Browsers only allow audio after a user gesture; the first
-// sound is always the player's own move, which is one.
-
 const mutedKey = 'soundMuted';
 let context = null;
 let muted = readMuted();
@@ -22,9 +18,7 @@ export function setMuted(value) {
   muted = value;
   try {
     localStorage.setItem(mutedKey, value ? '1' : '0');
-  } catch {
-    // storage blocked: the setting just won't stick
-  }
+  } catch {}
 }
 
 function audio() {
@@ -59,8 +53,8 @@ const sounds = {
     tone(ctx, { freq: 520, slideTo: 260, length: 0.06, type: 'triangle', volume: 0.2 });
   },
   check: (ctx) => {
-    tone(ctx, { freq: 660, length: 0.09, type: 'sine', volume: 0.2 });
-    tone(ctx, { freq: 880, start: 0.1, length: 0.12, type: 'sine', volume: 0.2 });
+    tone(ctx, { freq: 660, length: 0.09, volume: 0.2 });
+    tone(ctx, { freq: 880, start: 0.1, length: 0.12, volume: 0.2 });
   },
   gameOver: (ctx) => {
     tone(ctx, { freq: 523, length: 0.18, volume: 0.18 });
@@ -70,11 +64,9 @@ const sounds = {
 };
 
 export function playSound(name) {
-  if (muted || !sounds[name]) return;
+  if (muted) return;
   try {
     const ctx = audio();
     if (ctx) sounds[name](ctx);
-  } catch {
-    // no audio available; the game works fine without it
-  }
+  } catch {}
 }

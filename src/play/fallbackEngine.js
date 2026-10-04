@@ -1,13 +1,9 @@
 import { Chess } from 'chess.js';
 
-// Backup opponent, used only if the Stockfish WebAssembly engine can't load
-// (very old browser, blocked workers, failed download). A small minimax search
-// (2 plies, material plus a nudge toward the center) that always plays black.
-// It grabs hanging pieces and finds mate in one, so games still end.
-
 const pieceValues = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
 const mateScore = 100000;
 const searchDepth = 2;
+const varietyMargin = 15;
 
 function centerBonus({ square, type }) {
   if (type === 'k' || type === 'q') return 0;
@@ -17,10 +13,8 @@ function centerBonus({ square, type }) {
   return centrality * (type === 'p' ? 3 : 5);
 }
 
-// Positive scores favor black (the engine).
-function evaluate(chess, plyFromRoot) {
+function scoreForBlack(chess, plyFromRoot) {
   if (chess.isCheckmate()) {
-    // prefer faster mates and slower losses
     return chess.turn() === 'b' ? -mateScore + plyFromRoot : mateScore - plyFromRoot;
   }
   if (chess.isDraw()) return 0;
@@ -39,7 +33,7 @@ function evaluate(chess, plyFromRoot) {
 
 function minimax(chess, depth, alpha, beta, plyFromRoot) {
   if (depth === 0 || chess.isGameOver()) {
-    return evaluate(chess, plyFromRoot);
+    return scoreForBlack(chess, plyFromRoot);
   }
 
   const maximizing = chess.turn() === 'b';
@@ -70,10 +64,8 @@ export function chooseMove(fen) {
     return { move, score };
   });
 
-  // pick randomly among moves within 15 centipawns of the best so games vary
   const bestScore = Math.max(...scored.map((s) => s.score));
-  const candidates = scored.filter((s) => s.score >= bestScore - 15);
+  const candidates = scored.filter((s) => s.score >= bestScore - varietyMargin);
   const { move } = candidates[Math.floor(Math.random() * candidates.length)];
   return { from: move.from, to: move.to, promotion: move.promotion };
 }
-

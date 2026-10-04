@@ -4,8 +4,9 @@ import './chessBoard.css';
 const files = 'abcdefgh';
 export const pieceNames = { k: 'king', q: 'queen', r: 'rook', b: 'bishop', n: 'knight', p: 'pawn' };
 const dragThreshold = 5;
+const dropAnimationSkipMs = 1000;
 
-export function pieceSrc(color, type) {
+function pieceSrc(color, type) {
   return `/pieces/${color}${type.toUpperCase()}.svg`;
 }
 
@@ -65,9 +66,12 @@ export function ChessBoard({
   const interactive = Boolean(onSquareClick);
   const activeSquare = focusSquare ?? selected ?? firstWhitePiece(board);
   const dropped = droppedRef.current;
-  const slide =
-    lastMove &&
-    !(dropped && dropped.from === lastMove.from && dropped.to === lastMove.to && Date.now() - dropped.at < 1000);
+  const justDropped =
+    dropped &&
+    dropped.from === lastMove?.from &&
+    dropped.to === lastMove?.to &&
+    Date.now() - dropped.at < dropAnimationSkipMs;
+  const animateLastMove = lastMove && !justDropped;
 
   function squareFromPoint(x, y) {
     const el = document.elementFromPoint(x, y)?.closest?.('[data-square]');
@@ -86,9 +90,7 @@ export function ChessBoard({
     pressRef.current = { square: cell.dataset.square, x: e.clientX, y: e.clientY, dragging: false };
     try {
       tableRef.current.setPointerCapture(e.pointerId);
-    } catch {
-      return;
-    }
+    } catch {}
   }
 
   function handlePointerMove(e) {
@@ -97,10 +99,9 @@ export function ChessBoard({
     if (!press.dragging) {
       const moved = Math.hypot(e.clientX - press.x, e.clientY - press.y) > dragThreshold;
       if (!moved || !onDragStart) return;
-      const [file, rank] = [files.indexOf(press.square[0]), Number(press.square[1])];
-      const piece = board[8 - rank][file];
+      const piece = board[8 - Number(press.square[1])][files.indexOf(press.square[0])];
       if (!piece || !onDragStart(press.square)) {
-        pressRef.current = { ...press, dragging: false, blocked: true };
+        press.blocked = true;
         return;
       }
       press.dragging = true;
@@ -177,7 +178,7 @@ export function ChessBoard({
               {row.map((piece, c) => {
                 const square = files[c] + (8 - r);
                 const isTarget = targets.includes(square);
-                const arrived = slide && square === lastMove.to;
+                const arrived = animateLastMove && square === lastMove.to;
                 const classes = [
                   (r + c) % 2 === 0 ? 'light' : 'dark',
                   square === selected && 'selected',

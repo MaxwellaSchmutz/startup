@@ -12,6 +12,7 @@ import { isMuted, playSound, setMuted } from './sounds';
 import { plural, resultLabels, resultMessages } from './results';
 import { boardThemes, getBoardTheme, setBoardTheme } from './boardTheme';
 import { Icon } from '../icons';
+import { siteName, siteUrl } from '../site';
 
 const moveSeconds = 30;
 const startCounts = { q: 1, r: 2, b: 2, n: 2, p: 8 };
@@ -45,17 +46,16 @@ function materialSummary(board) {
   return { blackLost: lost('b'), whiteLost: lost('w'), balance: score('w') - score('b') };
 }
 
-function soundFor(chess, move) {
-  if (chess.isGameOver()) return null;
-  if (chess.inCheck()) return 'check';
-  return move.captured ? 'capture' : 'move';
+function playMoveSound(chess, move) {
+  if (chess.isGameOver()) return;
+  if (chess.inCheck()) playSound('check');
+  else playSound(move.captured ? 'capture' : 'move');
 }
 
-function CapturedRow({ label, pieces, color, advantage }) {
+function CapturedRow({ pieces, color, advantage }) {
   const side = color === 'white' ? 'w' : 'b';
   return (
     <div className="captured-row">
-      <span className="captured-label">{label}</span>
       <span
         className={`captured-pieces ${color}`}
         role="img"
@@ -132,7 +132,7 @@ function PromotionPicker({ onPick, onCancel }) {
 
 function GameSummary({ result, moves, isGuest, best, saving, onNewGame, onSave }) {
   const needsAccount = isGuest && guestGameUsed();
-  const [copied, setCopied] = React.useState('');
+  const [copyState, setCopyState] = React.useState('');
   const ref = React.useRef(null);
 
   React.useEffect(() => {
@@ -144,18 +144,20 @@ function GameSummary({ result, moves, isGuest, best, saving, onNewGame, onSave }
       el.scrollIntoView({ block: 'nearest', behavior: calm ? 'auto' : 'smooth' });
     }
   }, []);
-  const text = `I survived ${plural(moves, 'move')} against Stockfish (${(resultLabels[result] ?? result).toLowerCase()}) in Stockfish Survival. https://startup.beatstockfish.click/`;
+
+  const text = `I survived ${plural(moves, 'move')} against Stockfish (${resultLabels[result].toLowerCase()}) in ${siteName}. ${siteUrl}/`;
 
   async function copy() {
     try {
       await navigator.clipboard.writeText(text);
-      setCopied('Copied!');
+      setCopyState('copied');
     } catch {
-      setCopied('Could not copy');
+      setCopyState('failed');
     }
-    setTimeout(() => setCopied(''), 2000);
+    setTimeout(() => setCopyState(''), 2000);
   }
 
+  const copyLabel = { copied: 'Copied!', failed: 'Could not copy' }[copyState] || 'Copy result';
   const newBest = !isGuest && best !== null && moves >= best;
 
   return (
@@ -178,10 +180,10 @@ function GameSummary({ result, moves, isGuest, best, saving, onNewGame, onSave }
           {needsAccount ? 'Sign in to play again' : 'Play again'}
         </Button>
         <Button variant="outline-light" onClick={copy}>
-          <Icon name={copied === 'Copied!' ? 'check' : 'copy'} size={17} />
-          {copied || 'Copy result'}
+          <Icon name={copyState === 'copied' ? 'check' : 'copy'} size={17} />
+          {copyLabel}
         </Button>
-        {isGuest && onSave && (
+        {onSave && (
           <Button variant="warning" className="summary-save" onClick={onSave}>
             <Icon name="trophy" size={17} />
             Put it on the leaderboard
@@ -299,8 +301,7 @@ export function ChessGame({ aside = null }) {
     setPromotion(null);
     setMovesSurvived(moves);
     setFen(game.fen());
-    const sound = soundFor(game, move);
-    if (sound) playSound(sound);
+    playMoveSound(game, move);
 
     if (status === 'ready') {
       setStatus('playing');
@@ -386,8 +387,7 @@ export function ChessGame({ aside = null }) {
       setEngineSan(move.san);
       setSecondsLeft(moveSeconds);
       setFen(game.fen());
-      const sound = soundFor(game, move);
-      if (sound) playSound(sound);
+      playMoveSound(game, move);
       if (game.isGameOver()) {
         endGame(gameOverReason(), movesSurvived);
       }
@@ -423,7 +423,11 @@ export function ChessGame({ aside = null }) {
 
   const lowTime = status === 'playing' && playerTurn && secondsLeft <= 10;
   const clockShare = Math.max(secondsLeft, 0) / moveSeconds;
-  const tone = status === 'over' ? 'over' : game.inCheck() && playerTurn ? 'check' : engineThinking ? 'thinking' : 'idle';
+  function messageTone() {
+    if (status === 'over') return 'over';
+    if (game.inCheck() && playerTurn) return 'check';
+    return engineThinking ? 'thinking' : 'idle';
+  }
 
   return (
     <div className={`chess-game status-${status}`}>
@@ -446,7 +450,7 @@ export function ChessGame({ aside = null }) {
               )}
             </span>
           </span>
-          <CapturedRow label="" pieces={material.whiteLost} color="white" advantage={-material.balance} />
+          <CapturedRow pieces={material.whiteLost} color="white" advantage={-material.balance} />
         </div>
 
         <ChessBoard
@@ -480,7 +484,7 @@ export function ChessGame({ aside = null }) {
               <span className="player-sub">{isGuest ? 'Guest · not saved' : 'Playing white'}</span>
             </span>
           </span>
-          <CapturedRow label="" pieces={material.blackLost} color="black" advantage={material.balance} />
+          <CapturedRow pieces={material.blackLost} color="black" advantage={material.balance} />
         </div>
       </div>
 
@@ -516,7 +520,7 @@ export function ChessGame({ aside = null }) {
           </div>
         </div>
 
-        <div className={`game-message tone-${tone} ${status === 'over' ? 'game-over' : ''}`} role="status" aria-live="polite">
+        <div className={`game-message tone-${messageTone()} ${status === 'over' ? 'game-over' : ''}`} role="status" aria-live="polite">
           <span className="message-dot" aria-hidden="true" />
           <span>
             {statusText}

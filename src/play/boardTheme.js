@@ -19,9 +19,7 @@ export function setBoardTheme(id) {
   document.documentElement.dataset.board = id;
   try {
     localStorage.setItem(storageKey, id);
-  } catch {
-    return;
-  }
+  } catch {}
 }
 
 export function loadBoardTheme() {

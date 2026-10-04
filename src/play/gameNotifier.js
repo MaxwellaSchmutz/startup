@@ -1,13 +1,8 @@
-// Live game feed over a WebSocket to the service (service/peerProxy.js). The
-// server pushes who's online, games starting, and saved games; this module keeps
-// one shared connection for the whole app and hands each message to whichever
-// components are listening.
-
 export const GameEvent = {
-  Start: 'gameStart', // { name }
-  End: 'gameEnd', // { name, moves, result }
-  Presence: 'presence', // { online }
-  Status: 'status', // { connected } (local only: the socket opened or closed)
+  Start: 'gameStart',
+  End: 'gameEnd',
+  Presence: 'presence',
+  Status: 'status',
 };
 
 const reconnectDelayMs = 3000;
@@ -22,8 +17,6 @@ class LiveFeed {
   }
 
   connect() {
-    // Same host as the page (Vite proxies /ws to the service while debugging);
-    // wss when the page is served over https
     const protocol = window.location.protocol === 'http:' ? 'ws' : 'wss';
     this.socket = new WebSocket(`${protocol}://${window.location.host}/ws`);
 
@@ -34,7 +27,6 @@ class LiveFeed {
     this.socket.onclose = () => {
       this.connected = false;
       this.notify({ type: GameEvent.Status, connected: false });
-      // e.g. the service restarted during a deploy: keep trying
       setTimeout(() => this.connect(), reconnectDelayMs);
     };
     this.socket.onmessage = (msg) => {
@@ -42,20 +34,15 @@ class LiveFeed {
         const event = JSON.parse(msg.data);
         if (event.type === GameEvent.Presence) this.online = event.online;
         this.notify(event);
-      } catch {
-        // ignore anything that isn't JSON
-      }
+      } catch {}
     };
   }
 
-  // The server reads the login cookie once, when the socket connects, so after
-  // logging in or out the app reopens the connection to pick up the new cookie
   reconnect() {
     const old = this.socket;
     old.onclose = null;
     old.onmessage = null;
     if (old.readyState === WebSocket.CONNECTING) {
-      // closing mid-handshake logs a browser error, so close it once it opens
       old.onopen = () => old.close();
     } else {
       old.onopen = null;
@@ -65,7 +52,6 @@ class LiveFeed {
     this.connect();
   }
 
-  // The server attaches the logged-in player's name; guests' announcements are ignored
   announceGameStart() {
     if (this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({ type: GameEvent.Start }));

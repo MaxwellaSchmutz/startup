@@ -6,9 +6,8 @@ import { GameEvent, GameNotifier } from './gameNotifier';
 import { loadStats } from '../leaderboard/scores';
 import { useAuth } from '../login/authContext';
 import { Icon } from '../icons';
+import { repoUrl } from '../site';
 import './play.css';
-
-const repoUrl = 'https://github.com/MaxwellaSchmutz/startup';
 
 function SiteStats() {
   const [stats, setStats] = React.useState(null);
@@ -31,18 +30,18 @@ function SiteStats() {
   }, []);
 
   if (!stats) return null;
-  const n = (value) => value.toLocaleString();
+  const formatCount = (value) => value.toLocaleString();
   return (
     <p className="site-stats">
       <span className="stat-chip">
-        <strong>{n(stats.totalGames)}</strong> {stats.totalGames === 1 ? 'game' : 'games'} played
+        <strong>{formatCount(stats.totalGames)}</strong> {stats.totalGames === 1 ? 'game' : 'games'} played
       </span>
       <span className="stat-chip">
-        <strong>{n(stats.totalPlayers)}</strong> {stats.totalPlayers === 1 ? 'player' : 'players'}
+        <strong>{formatCount(stats.totalPlayers)}</strong> {stats.totalPlayers === 1 ? 'player' : 'players'}
       </span>
       {stats.bestMoves > 0 && (
         <span className="stat-chip">
-          best <strong>{n(stats.bestMoves)}</strong> moves
+          best <strong>{formatCount(stats.bestMoves)}</strong> moves
         </span>
       )}
     </p>
