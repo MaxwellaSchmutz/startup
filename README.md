@@ -173,13 +173,17 @@ For this deliverable I did the following. Everything below is live at <https://s
 
 ## 🚀 Service deliverable
 
-For this deliverable I did the following.
+For this deliverable I did the following. Live at <https://startup.beatstockfish.click>, and the Simon Service prerequisite is deployed at <https://simon.beatstockfish.click> (code in [`simon/`](simon), including its own `simon/service` backend).
 
-- [ ] **Node.js/Express HTTP service** - I did not complete this part of the deliverable.
-- [ ] **Static middleware for frontend** - I did not complete this part of the deliverable.
-- [ ] **Calls to third party endpoints** - I did not complete this part of the deliverable.
-- [ ] **Backend service endpoints** - I did not complete this part of the deliverable.
-- [ ] **Frontend calls service endpoints** - I did not complete this part of the deliverable.
+- [x] **Node.js/Express HTTP service** - [`service/index.js`](service/index.js) is an Express 5 app in its own npm project (`service/package.json`: `express`, `cookie-parser`, `bcryptjs`, `uuid`). It listens on port 4000 (or the port passed on the command line) and runs on the server as the `startup` PM2 app behind Caddy. `vite.config.js` proxies `/api` to it while debugging with `npm run dev`.
+- [x] **Static middleware for frontend** - `app.use(express.static('public'))` serves the Vite build, which `deployService.sh` copies into `public/`. That includes the Stockfish WebAssembly files, served with the correct `application/wasm` type. Any other path without a file extension (`/play`, `/leaderboard`, ...) gets `index.html` so the React router can handle it, and a missing file like `/logo.png` gets a real 404.
+- [x] **Calls to third party endpoints** - The About page's Chess.com lookup ([`src/about/chesscomService.js`](src/about/chesscomService.js)) calls the real [Chess.com PubAPI](https://www.chess.com/news/view/published-data-api) from the browser with `fetch`. It requests `/pub/player/{username}` (avatar, profile link) and `/pub/player/{username}/stats` (rating and win/loss/draw record) in parallel, and handles unknown players (404) and network errors.
+- [x] **Backend service endpoints** - `POST /api/auth/create`, `POST /api/auth/login`, `DELETE /api/auth/logout`, `GET /api/user/me`, `GET /api/scores` (the public leaderboard, top ten by moves survived), and `POST /api/score` (save a finished game). The server sets a saved game's player name (the part of the email before the @, since the leaderboard is public) and its date, and it validates the move count and result, so nobody can post a score as someone else or post junk. Bad JSON and missing fields get 400s with a message instead of crashing.
+- [x] **Frontend calls service endpoints** - Login and Create Account ([`src/login/authService.js`](src/login/authService.js)) call the auth endpoints and show the server's error messages, such as a wrong password or an existing account, in the dialog. Logout calls `DELETE /api/auth/logout`. On load, `App` checks the remembered login against `GET /api/user/me` and logs out a stale session. A logged-in player's finished games are `POST`ed to `/api/score` ([`src/leaderboard/scores.js`](src/leaderboard/scores.js)), and the leaderboard `fetch`es `GET /api/scores` in a `useEffect`, with loading and error states. localStorage no longer stores accounts or scores.
+- [x] **Supports registration, login, logout, and restricted endpoint** - Registering and logging in set an `httpOnly`, `secure`, `sameSite=strict` cookie holding a random UUID token. Logout deletes the token on the server and clears the cookie. A `verifyAuth` middleware guards `GET /api/user/me` and `POST /api/score`, returning 401 without a valid token. Guests can still play, but only logged-in players' games are saved.
+- [x] **Uses BCrypt to hash passwords** - `bcrypt.hash(password, 10)` on registration and `bcrypt.compare` on login; plain-text passwords are never stored. Users and scores live in memory until the DB deliverable moves them to MongoDB.
+
+**Also in this deliverable: mobile support.** On phones the nav collapses into a tappable hamburger menu, and the header is sticky so it never covers content. Nothing scrolls sideways at 320-430px. The Play view sizes the board from one `--board-size` variable, so the whole board fits on screen together with the clock and buttons in portrait, and sits beside them in phone landscape. Squares and buttons use `touch-action: manipulation` for instant taps. The leaderboard and the Chess.com lookup are compacted for narrow screens.
 
 ## 🚀 DB/Login deliverable
 

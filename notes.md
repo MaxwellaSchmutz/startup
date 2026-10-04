@@ -407,3 +407,62 @@ disk and `pm2 ls` returned `command not found`. Set it up the course way:
 `cluster`); **pid**; **uptime**; **↺** restart count (PM2 restarts crashed apps
 automatically); **status** `online`; **cpu/mem** usage; **user** it runs as;
 **watching** whether it auto-restarts on file changes.
+
+## Simon Service
+
+Brought `webprogramming260/simon-service` into `simon/`: an Express 5 backend in
+`simon/service` (port 3000) with cookie auth and in-memory users/scores, the
+frontend calling it with `fetch`, and About fetching a picsum image and a
+quote from quote.cs260.click. My earlier Simon fixes were kept.
+
+- **Two npm projects in one repo**: the frontend's `package.json` at the root
+  (bundled by Vite) and the backend's in `service/`. Backend dependencies must be
+  installed *in `service/`*, or the deployed service crashes with missing modules
+  and Caddy returns 502.
+- **Bugs found while studying it** (each fixed in its own commit):
+  - A missing email or password crashed bcrypt and returned 500 with the
+    internal error text. It now returns 400.
+  - `POST /api/score` stored any JSON, including another player's name. It now
+    takes the name from the auth token and validates the score.
+  - Malformed JSON gave a 500; the error handler now passes through `err.status`.
+  - Leaving Play mid-sequence threw on a null ref (`ref.current?.press`).
+- **deployService.sh** `rm -rf`s `~/services/simon`, copies `index.js`,
+  `package*.json`, and the Vite build as `public/`, runs `npm install` on the
+  server, then `pm2 restart simon`. Because PM2 remembered the old
+  `staticServer.cjs` path, the first deploy needed a one-time
+  `pm2 delete simon && pm2 start index.js --name simon -- 3000 && pm2 save`
+  from inside `~/services/simon`. The cwd matters, since `express.static('public')`
+  is relative to it.
+
+## Startup Service
+
+- **Endpoints**: `POST /api/auth/create`, `POST /api/auth/login`,
+  `DELETE /api/auth/logout`, `GET /api/user/me` (auth), `GET /api/scores`
+  (public), and `POST /api/score` (auth). `verifyAuth` middleware looks up the
+  user by the `token` cookie and attaches `req.user`, so handlers never trust a
+  name sent in the body.
+- **Don't leak emails**: the leaderboard is public, so scores store only the part
+  of the email before the @.
+- **Cookie auth**: the token is a random UUID in an `httpOnly` (JS can't read
+  it), `secure` (HTTPS only; browsers treat `localhost` as secure), and
+  `sameSite=strict` cookie. localStorage just remembers *which* email was logged
+  in for an instant first render, and `GET /api/user/me` on load catches a stale
+  one. That matters because in-memory sessions vanish whenever the service
+  restarts or redeploys.
+- **Vite proxy**: `vite.config.js` forwards `/api` to `localhost:4000` during
+  `npm run dev`, so the frontend uses the same relative URLs in dev and prod.
+- **Express 5 fallback**: `app.use((req, res) => res.sendFile('index.html', { root: 'public' }))`
+  after the routes lets the React router handle `/play` and `/leaderboard`. A
+  path with a file extension gets a 404 instead, so a broken image link doesn't
+  silently receive HTML.
+- **Real third-party call**: the Chess.com PubAPI allows CORS and needs no key,
+  so the browser fetches `/pub/player/{u}` and `/pub/player/{u}/stats` directly.
+  Plain `curl` gets a Cloudflare 403 challenge; a real browser `fetch` works.
+- **Mobile**: replaced the fixed-top nav with a sticky React Bootstrap `Navbar`
+  that collapses into a hamburger below 768px. The fixed header used to rely on
+  a guessed 80px gap. Dropped `.body { min-width: 375px }`, which caused
+  sideways scroll on 320-360px phones. One `--board-size` CSS variable drives the
+  board width, square height, and piece size. `touch-action: manipulation`
+  removes the double-tap-zoom delay on squares and buttons. Testing tip:
+  Playwright's `isMobile` widens `innerWidth` to fit overflowing content, so
+  check `scrollWidth` against the configured viewport width, not `innerWidth`.
