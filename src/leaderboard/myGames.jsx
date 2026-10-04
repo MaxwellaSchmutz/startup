@@ -9,8 +9,9 @@ const resultLabels = {
   win: 'Won!',
 };
 
-// The logged-in player's personal best and recent games, read from the database
-export function MyGames() {
+// The logged-in player's personal best and recent games, read from the database.
+// version changes when the leaderboard hears about a new game, which reloads this too.
+export function MyGames({ version }) {
   const [games, setGames] = React.useState(null);
   const [error, setError] = React.useState('');
 
@@ -18,7 +19,7 @@ export function MyGames() {
     loadMyGames()
       .then(setGames)
       .catch((err) => setError(err.message));
-  }, []);
+  }, [version]);
 
   if (error) return <p className="my-games-note">{error}</p>;
   if (!games) return <p className="my-games-note">Loading your games...</p>;

@@ -1,6 +1,7 @@
 import React from 'react';
 import { formatDate, loadScores } from './scores';
 import { MyGames } from './myGames';
+import { GameEvent, GameNotifier } from '../play/gameNotifier';
 import { displayName } from '../login/authService';
 import './leaderboard.css';
 
@@ -8,13 +9,26 @@ export function Leaderboard({ userName }) {
   const [scores, setScores] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
+  // Bumped whenever the server pushes a newly saved game over WebSocket
+  const [version, setVersion] = React.useState(0);
 
-  // Fetch the leaderboard from the service when the view opens.
+  // Fetch the leaderboard when the view opens and again after every live update
   React.useEffect(() => {
     loadScores()
-      .then(setScores)
+      .then((latest) => {
+        setScores(latest);
+        setError('');
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
+  }, [version]);
+
+  React.useEffect(() => {
+    function handleEvent(event) {
+      if (event.type === GameEvent.End) setVersion((v) => v + 1);
+    }
+    GameNotifier.addHandler(handleEvent);
+    return () => GameNotifier.removeHandler(handleEvent);
   }, []);
 
   let emptyMessage = 'No games yet. Be the first to survive!';
@@ -53,7 +67,7 @@ export function Leaderboard({ userName }) {
         </tbody>
       </table>
 
-      {userName && <MyGames />}
+      {userName && <MyGames version={version} />}
     </main>
   );
 }

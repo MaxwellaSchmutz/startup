@@ -63,7 +63,7 @@ export function About() {
       </p>
 
       <div>
-        {/* Third party service: Chess.com PubAPI lookup (mocked in chesscomService.js) */}
+        {/* Third party service: Chess.com PubAPI lookup (chesscomService.js) */}
         <h2>Look up a Chess.com player</h2>
         <p>Enter a Chess.com username to see their public stats, pulled live from the Chess.com PubAPI.</p>
         <form
