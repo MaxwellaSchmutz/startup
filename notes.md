@@ -573,3 +573,29 @@ quote from quote.cs260.click. My earlier Simon fixes were kept.
   games" reload whenever anyone saves a game.
 - Testing: Playwright with several browser contexts (each its own cookie jar)
   plus a raw `ws` client, all against the live `wss://` endpoint.
+
+## Practice, coach, and tutor
+
+- The Stockfish lite WASM build supports `Skill Level` 0-20, `UCI_LimitStrength` +
+  `UCI_Elo` (1320-3190), and `MultiPV`. Send `setoption` before `go`, and only
+  when the settings change, since the same worker also plays ranked games at full
+  strength.
+- **Two workers**: one plays and one analyzes, each with its own promise queue,
+  so the coach never delays the opponent's move. Analysis results are cached per
+  FEN, so the "before" analysis from while you were thinking gets reused when
+  grading your move.
+- **Grading**: compare the eval of the position before your move (best play)
+  with the eval after it, both from White's point of view. Stockfish reports
+  scores from the side to move, so flip the sign when Black is to move. A mate in
+  N becomes about ±(10000 - 10N) so mates compare sensibly with centipawns.
+- **Threat detection** = a null move: flip the side to move in the FEN (and clear
+  en passant), ask Stockfish for Black's best move, and report it if it mates or
+  wins a piece.
+- chess.js `attackers(square, color)` finds hanging pieces: attacked and
+  undefended, or attacked by a cheaper piece.
+- **AI tutor**: never let an LLM do chess analysis itself. It hallucinates moves.
+  Feed it Stockfish's facts and only ask it to explain them. Bedrock's `Converse`
+  API works the same for any model. Load the AWS SDK only when a model is
+  configured (it slowed service startup and costs memory on a t3.micro). Without
+  credentials the SDK throws `CredentialsProviderError`, which becomes a friendly
+  503.
