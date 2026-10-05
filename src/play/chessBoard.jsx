@@ -22,6 +22,41 @@ export function PieceImg({ color, type, className = '' }) {
   );
 }
 
+function squareCenter(square) {
+  return { x: files.indexOf(square[0]) + 0.5, y: 8 - Number(square[1]) + 0.5 };
+}
+
+function BoardArrows({ arrows }) {
+  return (
+    <svg className="board-arrows" viewBox="0 0 8 8" aria-hidden="true">
+      <defs>
+        {['hint', 'threat', 'best'].map((kind) => (
+          <marker key={kind} id={'arrowhead-' + kind} className={'arrowhead ' + kind} viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3" markerHeight="3" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" />
+          </marker>
+        ))}
+      </defs>
+      {arrows.map(({ from, to, kind }) => {
+        const start = squareCenter(from);
+        const end = squareCenter(to);
+        const length = Math.hypot(end.x - start.x, end.y - start.y);
+        const trim = 0.38 / length;
+        return (
+          <line
+            key={kind + from + to}
+            className={'arrow ' + kind}
+            x1={start.x}
+            y1={start.y}
+            x2={end.x - (end.x - start.x) * trim}
+            y2={end.y - (end.y - start.y) * trim}
+            markerEnd={'url(#arrowhead-' + kind + ')'}
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
 function squareAt(file, rank) {
   if (file < 0 || file > 7 || rank < 1 || rank > 8) return null;
   return files[file] + rank;
@@ -55,6 +90,7 @@ export function ChessBoard({
   onDrop,
   label = 'Chess board',
   className = '',
+  arrows = [],
   children,
 }) {
   const tableRef = React.useRef(null);
@@ -228,6 +264,7 @@ export function ChessBoard({
           ))}
         </tbody>
       </table>
+      {arrows.length > 0 && <BoardArrows arrows={arrows} />}
       {children}
       {drag && (
         <img
