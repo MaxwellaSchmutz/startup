@@ -214,3 +214,16 @@ For this deliverable I did the following. Live at <https://startup.beatstockfish
   - Client to server: `gameStart` when a logged-in player makes their first move. The server looks up the player from their auth cookie in MongoDB and attaches their real name; announcements from guests, logged-out tokens, or made-up names are dropped. I tested that a raw client sending `{"type":"gameStart","name":"hacker"}` produces nothing.
 - [x] **WebSocket data displayed** - On the Play page, **Live activity** shows a green "● Live · N other people on the site" status from `presence` (or "○ Reconnecting..."), plus a running list of everyone's games as they start and finish, with your own shown as "You". On the **Leaderboard**, a `gameEnd` from anyone makes the top-ten table and **Your games** refetch, so a new score appears without reloading. I tested this with several browsers at once on the live site.
 - [x] **Application is fully functional** - Nothing is mocked or a placeholder anymore. The fake players that used to generate activity on a timer are gone; every live event is a real player. Accounts, sessions, and scores live in MongoDB, the opponent is real Stockfish 19 (WebAssembly in the browser), the Chess.com lookup calls the real PubAPI, and the live feed is real WebSocket traffic.
+
+## 🎓 Practice mode, coach, and AI tutor
+
+Added after the graded deliverables.
+
+- **Practice tab** (`/practice`): play Stockfish at six levels: Beginner (skill 0), Casual ~1400, Club ~1800, Expert ~2200, Master ~2600, and full-strength Stockfish. The levels use Stockfish's `Skill Level` and `UCI_LimitStrength`/`UCI_Elo` options. Practice games are unranked (nothing is saved), have no move clock, allow takebacks, and don't use up a guest's free ranked game.
+- **Coach** (runs entirely in the browser): a second Stockfish worker analyzes every position.
+  - An evaluation bar shows who is winning.
+  - Each of your moves is graded best, good, inaccuracy, mistake, or blunder by how much evaluation it gave up. A weak move gets a mini board with your move (red) and the engine's move (blue) plus its best line.
+  - A **Hint** button draws the best move as a green arrow.
+  - Threat warnings come from a null-move search ("Stockfish threatens Qxf7#").
+  - Plain-language tips cover hanging pieces, check, an uncastled king, and an early queen.
+- **AI tutor** (optional, logged-in players): "Ask the tutor why" sends the engine's facts about your move to `POST /api/tutor`. The backend asks a Claude model on Amazon Bedrock to explain them in a few friendly sentences, and the prompt only lets it explain Stockfish's analysis, never invent its own. The endpoint requires login, validates every field, is rate limited to 20 questions per hour per player and 300 per day overall, and returns 503 until a model is configured. `GET /api/tutor` tells the frontend whether to show the button.
