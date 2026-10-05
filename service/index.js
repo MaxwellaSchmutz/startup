@@ -10,6 +10,7 @@ const uuid = require('uuid');
 const DB = require('./database.js');
 const { peerProxy } = require('./peerProxy.js');
 const { authCookieName, displayName } = require('./auth.js');
+const tutor = require('./tutor.js');
 
 const app = express();
 
@@ -32,6 +33,10 @@ const pageMeta = {
   '/leaderboard': {
     title: 'Leaderboard · Stockfish Survival',
     description: 'The players who survived the longest against Stockfish 19, updated live as games finish.',
+  },
+  '/practice': {
+    title: 'Practice with a coach · Stockfish Survival',
+    description: 'Practice chess against Stockfish at six difficulty levels with a coach that grades your moves, shows better ideas, warns about threats, and explains mistakes.',
   },
   '/learn': {
     title: 'Learn to play · Stockfish Survival',
@@ -125,6 +130,45 @@ const scoreLimiter = limiter({
   msg: "You've submitted a lot of games this hour. Take a short break and try again later.",
 });
 
+const tutorLimiter = limiter({
+  name: 'tutor',
+  windowMs: 60 * 60 * 1000,
+  limit: 20,
+  keyGenerator: (req) => req.user.email,
+  msg: 'The tutor needs a breather. You can ask about 20 questions an hour.',
+});
+
+const tutorDailyLimit = 300;
+const tutorUsage = { day: '', count: 0 };
+const tutorGrades = ['best', 'good', 'inaccuracy', 'mistake', 'blunder'];
+const sanPattern = /^[KQRBNa-h1-8xO+#=-]{2,8}$/;
+const fenPattern = /^[pnbrqkPNBRQK1-8/]{15,90} [wb] [KQkq-]{1,4} [a-h1-8-]{1,2} \d{1,3} \d{1,4}$/;
+
+function validTutorRequest(body) {
+  return (
+    typeof body?.fen === 'string' &&
+    fenPattern.test(body.fen) &&
+    typeof body.played === 'string' &&
+    sanPattern.test(body.played) &&
+    typeof body.best === 'string' &&
+    sanPattern.test(body.best) &&
+    Array.isArray(body.line) &&
+    body.line.length <= 8 &&
+    body.line.every((san) => typeof san === 'string' && sanPattern.test(san)) &&
+    tutorGrades.includes(body.grade) &&
+    Number.isFinite(body.before) &&
+    Number.isFinite(body.after)
+  );
+}
+
+function underDailyLimit() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (tutorUsage.day !== today) Object.assign(tutorUsage, { day: today, count: 0 });
+  if (tutorUsage.count >= tutorDailyLimit) return false;
+  tutorUsage.count++;
+  return true;
+}
+
 apiRouter.post('/auth/create', createLimiter, async (req, res) => {
   const { email, password } = credentials(req.body);
   if (!email || !password) {
@@ -214,6 +258,33 @@ apiRouter.post('/score', verifyAuth, scoreLimiter, async (req, res) => {
   const score = await DB.addScore({ email, name: displayName(email), moves, result, createdAt: new Date() });
   liveFeed.broadcast({ type: 'gameEnd', name: score.name, moves, result });
   res.status(201).send(score);
+});
+
+apiRouter.get('/tutor', (_req, res) => {
+  res.send({ available: tutor.isAvailable() });
+});
+
+apiRouter.post('/tutor', verifyAuth, tutorLimiter, async (req, res) => {
+  if (!validTutorRequest(req.body)) {
+    res.status(400).send({ msg: 'That move could not be explained.' });
+    return;
+  }
+  if (!tutor.isAvailable()) {
+    res.status(503).send({ msg: "The AI tutor isn't set up on this server yet." });
+    return;
+  }
+  if (!underDailyLimit()) {
+    res.status(429).send({ msg: 'The tutor has answered a lot of questions today. Try again tomorrow.' });
+    return;
+  }
+  const { fen, played, best, line, grade, before, after } = req.body;
+  try {
+    const text = await tutor.explainMove({ fen, played, best, line, grade, before, after });
+    res.send({ text });
+  } catch (err) {
+    securityLog('tutor_error', { email: req.user.email, error: err.name });
+    res.status(503).send({ msg: 'The AI tutor is unavailable right now. Try again in a bit.' });
+  }
 });
 
 app.use((err, req, res, _next) => {
