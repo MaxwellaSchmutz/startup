@@ -107,7 +107,9 @@ function MoveReview({ review, signedIn, onLogin }) {
 
 export function CoachPanel({ coach, status, signedIn, onLogin }) {
   const lastScore = React.useRef(null);
-  if (coach.current?.score !== undefined && coach.current?.score !== null) lastScore.current = coach.current.score;
+  const reviewed = coach.review && !coach.review.pending ? coach.review.after : null;
+  const freshScore = coach.current?.score ?? reviewed;
+  if (freshScore !== null && freshScore !== undefined) lastScore.current = freshScore;
   const playing = status !== 'over';
 
   return (
