@@ -13,6 +13,8 @@ import { plural, resultLabels, resultMessages } from './results';
 import { boardThemes, getBoardTheme, setBoardTheme } from './boardTheme';
 import { Icon } from '../icons';
 import { siteName, siteUrl } from '../site';
+import { useCoach } from '../practice/useCoach';
+import { CoachPanel } from '../practice/coachPanel';
 
 const moveSeconds = 30;
 const startCounts = { q: 1, r: 2, b: 2, n: 2, p: 8 };
@@ -130,7 +132,7 @@ function PromotionPicker({ onPick, onCancel }) {
   );
 }
 
-function GameSummary({ result, moves, isGuest, best, saving, onNewGame, onSave }) {
+function GameSummary({ result, moves, isGuest, best, saving, onNewGame, onSave, practiceLabel }) {
   const needsAccount = isGuest && guestGameUsed();
   const [copyState, setCopyState] = React.useState('');
   const ref = React.useRef(null);
@@ -145,7 +147,8 @@ function GameSummary({ result, moves, isGuest, best, saving, onNewGame, onSave }
     }
   }, []);
 
-  const text = `I survived ${plural(moves, 'move')} against Stockfish (${resultLabels[result].toLowerCase()}) in ${siteName}. ${siteUrl}/`;
+  const opponent = practiceLabel ? `Stockfish (${practiceLabel}) in practice` : 'Stockfish';
+  const text = `I survived ${plural(moves, 'move')} against ${opponent} (${resultLabels[result].toLowerCase()}) in ${siteName}. ${siteUrl}/`;
 
   async function copy() {
     try {
@@ -162,7 +165,7 @@ function GameSummary({ result, moves, isGuest, best, saving, onNewGame, onSave }
 
   return (
     <section ref={ref} className={`game-summary card-surface ${result === 'win' ? 'won' : ''}`} aria-label="Game over">
-      <h2 className="panel-heading">Game over</h2>
+      <h2 className="panel-heading">{practiceLabel ? `Practice game · ${practiceLabel}` : 'Game over'}</h2>
       <div className="summary-moves">
         <span className="summary-number">{moves}</span>
         <span className="summary-unit">{moves === 1 ? 'move' : 'moves'} survived</span>
@@ -218,9 +221,10 @@ function BoardThemePicker() {
   );
 }
 
-export function ChessGame({ aside = null }) {
+export function ChessGame({ aside = null, practice = null }) {
   const { userName, openAuth, notify, sessionExpired } = useAuth();
   const isGuest = !userName;
+  const gated = isGuest && !practice;
   const playerName = isGuest ? 'Guest' : displayName(userName);
   const guestRef = React.useRef(isGuest);
   guestRef.current = isGuest;
@@ -242,6 +246,7 @@ export function ChessGame({ aside = null }) {
   const [promotion, setPromotion] = React.useState(null);
   const [muted, setMutedState] = React.useState(isMuted());
   const [engineSan, setEngineSan] = React.useState('');
+  const [lastPlayerMove, setLastPlayerMove] = React.useState(null);
 
   const playerTurn = game.turn() === 'w';
   const engineThinking = status === 'playing' && !playerTurn;
@@ -249,6 +254,7 @@ export function ChessGame({ aside = null }) {
   const targets = selected ? game.moves({ square: selected, verbose: true }).map((m) => m.to) : [];
   const history = game.history();
   const material = materialSummary(game.board());
+  const coach = useCoach({ enabled: Boolean(practice), game, fen, status, lastPlayerMove });
 
   function endGame(reason, moves) {
     setStatus('over');
@@ -257,6 +263,7 @@ export function ChessGame({ aside = null }) {
     setPromotion(null);
     playSound('gameOver');
 
+    if (practice) return;
     if (guestRef.current) {
       setPendingScore({ moves, result: reason });
       openAuth({ kind: 'result', moves, result: reason });
@@ -286,7 +293,7 @@ export function ChessGame({ aside = null }) {
   }
 
   function blockedByGate() {
-    if (status === 'ready' && isGuest && guestGameUsed()) {
+    if (status === 'ready' && gated && guestGameUsed()) {
       openAuth({ kind: 'gate' });
       return true;
     }
@@ -294,7 +301,9 @@ export function ChessGame({ aside = null }) {
   }
 
   function playerMove(from, to, promotionPiece) {
+    const fenBefore = game.fen();
     const move = game.move({ from, to, promotion: promotionPiece });
+    setLastPlayerMove({ fenBefore, fenAfter: game.fen(), move });
     const moves = movesSurvived + 1;
     setLastMove({ from: move.from, to: move.to });
     setSelected(null);
@@ -305,8 +314,8 @@ export function ChessGame({ aside = null }) {
 
     if (status === 'ready') {
       setStatus('playing');
-      if (isGuest) markGuestGameUsed();
-      else GameNotifier.announceGameStart();
+      if (gated) markGuestGameUsed();
+      else if (!practice) GameNotifier.announceGameStart();
     }
     if (game.isGameOver()) {
       endGame(gameOverReason(), moves);
@@ -348,7 +357,7 @@ export function ChessGame({ aside = null }) {
   }
 
   function newGame() {
-    if (isGuest && guestGameUsed()) {
+    if (gated && guestGameUsed()) {
       openAuth({ kind: 'gate' });
       return;
     }
@@ -364,6 +373,24 @@ export function ChessGame({ aside = null }) {
     setBest(null);
     setPromotion(null);
     setEngineSan('');
+    setLastPlayerMove(null);
+  }
+
+  function takeBack() {
+    if (engineThinking || history.length === 0) return;
+    game.undo();
+    if (game.turn() === 'b') game.undo();
+    const played = game.history({ verbose: true });
+    const last = played[played.length - 1];
+    setLastMove(last ? { from: last.from, to: last.to } : null);
+    setMovesSurvived(Math.ceil(played.length / 2));
+    setStatus(played.length ? 'playing' : 'ready');
+    setResult('');
+    setSelected(null);
+    setPromotion(null);
+    setEngineSan('');
+    setLastPlayerMove(null);
+    setFen(game.fen());
   }
 
   function toggleSound() {
@@ -380,7 +407,7 @@ export function ChessGame({ aside = null }) {
     if (status !== 'playing' || game.turn() !== 'b') return;
 
     let cancelled = false;
-    getEngineMove(game.fen()).then((engineMove) => {
+    getEngineMove(game.fen(), practice?.strength).then((engineMove) => {
       if (cancelled) return;
       const move = game.move(engineMove);
       setLastMove({ from: move.from, to: move.to });
@@ -398,7 +425,7 @@ export function ChessGame({ aside = null }) {
   }, [fen, status]);
 
   React.useEffect(() => {
-    if (status !== 'playing' || game.turn() !== 'w') return;
+    if (practice || status !== 'playing' || game.turn() !== 'w') return;
     const timer = setInterval(() => setSecondsLeft((s) => s - 1), 1000);
     return () => clearInterval(timer);
   }, [fen, status]);
@@ -409,7 +436,7 @@ export function ChessGame({ aside = null }) {
     }
   }, [secondsLeft, status]);
 
-  let statusText = 'Make your first move to start the clock. You are white.';
+  let statusText = practice ? 'Practice game: no clock, no pressure. You are white.' : 'Make your first move to start the clock. You are white.';
   if (status === 'over') statusText = resultMessages[result];
   else if (promotion) statusText = 'Pick a piece to promote your pawn to.';
   else if (engineThinking) statusText = 'Stockfish is thinking...';
@@ -417,7 +444,7 @@ export function ChessGame({ aside = null }) {
     const reply = engineSan ? `Stockfish played ${engineSan}. ` : '';
     statusText = reply + (game.inCheck() ? 'Check! Your move.' : 'Your move.');
   }
-  if (status === 'ready' && isGuest && guestGameUsed()) {
+  if (status === 'ready' && gated && guestGameUsed()) {
     statusText = 'You have used your free game. Log in to keep playing.';
   }
 
@@ -446,7 +473,7 @@ export function ChessGame({ aside = null }) {
                   <i />
                 </span>
               ) : (
-                <span className="player-sub">Full strength</span>
+                <span className="player-sub">{practice ? `${practice.label} · ${practice.rating}` : 'Full strength'}</span>
               )}
             </span>
           </span>
@@ -464,6 +491,7 @@ export function ChessGame({ aside = null }) {
           onSquareClick={onSquareClick}
           onDragStart={onDragStart}
           onDrop={onDrop}
+          arrows={coach.arrows}
           className="game-board"
         >
           {promotion && (
@@ -481,7 +509,7 @@ export function ChessGame({ aside = null }) {
             </span>
             <span className="player-ident">
               <span className="player-name player-title">{playerName}</span>
-              <span className="player-sub">{isGuest ? 'Guest · not saved' : 'Playing white'}</span>
+              <span className="player-sub">{practice ? 'Practice · not ranked' : isGuest ? 'Guest · not saved' : 'Playing white'}</span>
             </span>
           </span>
           <CapturedRow pieces={material.blackLost} color="black" advantage={material.balance} />
@@ -492,32 +520,40 @@ export function ChessGame({ aside = null }) {
         <div className="game-status card-surface">
           <div className="stat stat-moves">
             <span className="stat-label" id="movesSurvivedLabel">
-              Moves survived
+              {practice ? 'Moves played' : 'Moves survived'}
             </span>
             <span className="stat-value" id="movesSurvived" aria-labelledby="movesSurvivedLabel" key={movesSurvived}>
               {movesSurvived}
             </span>
           </div>
-          <div className={`stat stat-clock ${lowTime ? 'is-low' : ''}`}>
-            <span className="stat-label" id="moveClockLabel">
-              <Icon name="clock" size={14} />
-              Move clock
-            </span>
-            <span
-              className={`stat-value clock ${lowTime ? 'low-time' : ''}`}
-              id="moveClock"
-              aria-labelledby="moveClockLabel"
-              role="timer"
-            >
-              {formatClock(secondsLeft)}
-            </span>
-            <span className="clock-track" aria-hidden="true">
+          {practice ? (
+            <div className="stat stat-level">
+              <span className="stat-label">Opponent</span>
+              <span className="stat-value level-value">{practice.label}</span>
+              <span className="stat-note">{practice.rating}</span>
+            </div>
+          ) : (
+            <div className={`stat stat-clock ${lowTime ? 'is-low' : ''}`}>
+              <span className="stat-label" id="moveClockLabel">
+                <Icon name="clock" size={14} />
+                Move clock
+              </span>
               <span
-                className={`clock-fill ${status === 'playing' && playerTurn ? 'running' : ''}`}
-                style={{ transform: `scaleX(${clockShare})` }}
-              />
-            </span>
-          </div>
+                className={`stat-value clock ${lowTime ? 'low-time' : ''}`}
+                id="moveClock"
+                aria-labelledby="moveClockLabel"
+                role="timer"
+              >
+                {formatClock(secondsLeft)}
+              </span>
+              <span className="clock-track" aria-hidden="true">
+                <span
+                  className={`clock-fill ${status === 'playing' && playerTurn ? 'running' : ''}`}
+                  style={{ transform: `scaleX(${clockShare})` }}
+                />
+              </span>
+            </div>
+          )}
         </div>
 
         <div className={`game-message tone-${messageTone()} ${status === 'over' ? 'game-over' : ''}`} role="status" aria-live="polite">
@@ -537,6 +573,17 @@ export function ChessGame({ aside = null }) {
             <Icon name="flag" size={17} />
             Resign
           </Button>
+          {practice && (
+            <Button
+              variant="outline-light"
+              disabled={engineThinking || history.length === 0}
+              onClick={takeBack}
+              title="Undo your last move"
+            >
+              <Icon name="undo" size={17} />
+              Takeback
+            </Button>
+          )}
           <Button variant={status === 'over' ? 'outline-light' : 'primary'} onClick={newGame}>
             <Icon name="refresh" size={17} />
             New Game
@@ -557,21 +604,24 @@ export function ChessGame({ aside = null }) {
           <GameSummary
             result={result}
             moves={movesSurvived}
-            isGuest={isGuest}
+            isGuest={isGuest && !practice}
+            practiceLabel={practice?.label}
             best={best}
             saving={saving}
             onNewGame={newGame}
             onSave={
-              isGuest && getPendingScore()
+              gated && getPendingScore()
                 ? () => openAuth({ kind: 'result', moves: movesSurvived, result })
                 : null
             }
           />
         )}
 
+        {practice && <CoachPanel coach={coach} status={status} signedIn={!isGuest} onLogin={() => openAuth({ kind: 'login' })} />}
+
         <MoveList history={history} />
 
-        {isGuest && status !== 'over' && (
+        {gated && status !== 'over' && (
           <p className="guest-note">
             <Icon name="info" size={16} />
             <span>

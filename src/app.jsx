@@ -22,6 +22,7 @@ import { loadBoardTheme } from './play/boardTheme';
 import { repoUrl, siteName, siteUrl } from './site';
 
 const Leaderboard = React.lazy(() => import('./leaderboard/leaderboard').then((m) => ({ default: m.Leaderboard })));
+const Practice = React.lazy(() => import('./practice/practice').then((m) => ({ default: m.Practice })));
 const Learn = React.lazy(() => import('./learn/learn').then((m) => ({ default: m.Learn })));
 const About = React.lazy(() => import('./about/about').then((m) => ({ default: m.About })));
 
@@ -34,6 +35,10 @@ const pages = {
   '/leaderboard': {
     title: `Leaderboard · ${siteName}`,
     description: 'The players who survived the longest against Stockfish 19, updated live as games finish.',
+  },
+  '/practice': {
+    title: `Practice with a coach · ${siteName}`,
+    description: 'Practice chess against Stockfish at six difficulty levels with a coach that grades your moves, shows better ideas, warns about threats, and explains mistakes.',
   },
   '/learn': {
     title: `Learn to play · ${siteName}`,
@@ -53,6 +58,7 @@ function setHeadValue(selector, attribute, value) {
 
 const navItems = [
   { to: '/', label: 'Play', icon: 'play', end: true },
+  { to: '/practice', label: 'Practice', icon: 'school' },
   { to: '/leaderboard', label: 'Leaderboard', icon: 'trophy' },
   { to: '/learn', label: 'Learn', icon: 'book' },
   { to: '/about', label: 'About', icon: 'info' },
@@ -151,6 +157,7 @@ function AppRoutes() {
           <Route path="/play" element={<Navigate to="/" replace />} />
           <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/practice" element={<Practice />} />
           <Route path="/learn" element={<Learn />} />
           <Route path="/about" element={<About />} />
           <Route path="*" element={<NotFound />} />
